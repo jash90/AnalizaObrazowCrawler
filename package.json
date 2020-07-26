@@ -8,6 +8,7 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
     "fs": "0.0.1-security",
+    "jimp": "^0.14.0",
     "node-html-parser": "^1.2.18",
     "request": "^2.88.2",
     "request-promise-native": "^1.0.8",
