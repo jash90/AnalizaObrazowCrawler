@@ -56,6 +56,28 @@ const getColorPixelFromImage = function (image, width, height) {
     return Jimp.intToRGBA(image.getPixelColor(width, height));
 }
 
+const getDefaultSquare = function (image1, image2) {
+
+    const image1Size = calculateSize(image1.bitmap);
+    const image2Size = calculateSize(image2.bitmap);
+
+    const square1 = calculateSquare(image1Size);
+
+    const square2 = calculateSquare(image2Size);
+
+    return compareSquare(square1, square2);
+}
+
+const compareImages = function (image1, image2, x, y, sumCompare) {
+    const color1 = getColorPixelFromImage(image1, x, y);
+    const color2 = getColorPixelFromImage(image2, x, y);
+
+    if (compareRGBA(color1, color2)) {
+        sumCompare += 1;
+    }
+}
+
+
 const compareRGBA = function (color1, color2) {
     if (Math.abs(color1.r - color2.r) > 30)
         return false
@@ -75,98 +97,34 @@ var oneSquare = async function (imagePath, secondImagePath) {
     const image1 = await Jimp.read(imagePath);
     const image2 = await Jimp.read(secondImagePath);
 
-    const image1Size = calculateSize(image1.bitmap);
-    const image2Size = calculateSize(image2.bitmap);
-
-    const square1 = calculateSquare(image1Size);
-
-    const square2 = calculateSquare(image2Size);
-
-    const defaultSquare = compareSquare(square1, square2);
+    const defaultSquare = getDefaultSquare(imagePath, secondImagePath);
 
     var sumCompare = 0;
 
     for (var i = 0; i < defaultSquare.width; i++)
         for (var j = 0; j < defaultSquare.height; j++) {
-            const color1 = getColorPixelFromImage(image1, square1.width + i, square1.height + j);
-            const color2 = getColorPixelFromImage(image2, square2.width + i, square2.height + j);
-
-            if (compareRGBA(color1, color2)) {
-                sumCompare += 1;
-            }
+            compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j, sumCompare);
         }
 
-        return `One Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height)*100).toFixed(2)} %`;
+    return `One Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2)} %`;
 }
 
 var fiveSquare = async function (imagePath, secondImagePath) {
-    const image1 = await Jimp.read(imagePath);
-    const image2 = await Jimp.read(secondImagePath);
-
-    const image1Size = calculateSize(image1.bitmap);
-    const image2Size = calculateSize(image2.bitmap);
-
-    const square1 = calculateSquare(image1Size);
-
-    const square2 = calculateSquare(image2Size);
-
-    const defaultSquare = compareSquare(square1, square2);
+    const defaultSquare = getDefaultSquare(imagePath, secondImagePath);
 
     var sumCompare = 0;
 
-
     for (var i = 0; i < defaultSquare.width; i++)
         for (var j = 0; j < defaultSquare.height; j++) {
-            const color1 = getColorPixelFromImage(image1, i, j);
-            const color2 = getColorPixelFromImage(image2, i, j);
+            compareImages(image1, image2, i, j, sumCompare);
+            compareImages(image1, image2, square1.width + i, square1.height + j, sumCompare);
+            compareImages(image1, image2, square1.width * 2 + i, j, sumCompare);
+            compareImages(image1, image2, i, square1.height * 2 + j, sumCompare);
+            compareImages(image1, image2, square1.width * 2 + i, square1.height * 2 + j, sumCompare);
 
-            if (compareRGBA(color1, color2)) {
-                sumCompare += 1;
-            }
         }
 
-    for (var i = 0; i < defaultSquare.width; i++)
-        for (var j = 0; j < defaultSquare.height; j++) {
-            const color1 = getColorPixelFromImage(image1, square1.width + i, square1.height + j);
-            const color2 = getColorPixelFromImage(image2, square2.width + i, square2.height + j);
-
-            if (compareRGBA(color1, color2)) {
-                sumCompare += 1;
-            }
-        }
-
-
-    for (var i = 0; i < defaultSquare.width; i++)
-        for (var j = 0; j < defaultSquare.height; j++) {
-            const color1 = getColorPixelFromImage(image1, square1.width * 2 + i, j);
-            const color2 = getColorPixelFromImage(image2, square2.width * 2 + i, j);
-
-            if (compareRGBA(color1, color2)) {
-                sumCompare += 1;
-            }
-        }
-
-    for (var i = 0; i < defaultSquare.width; i++)
-        for (var j = 0; j < defaultSquare.height; j++) {
-            const color1 = getColorPixelFromImage(image1, i, square1.height * 2 + j);
-            const color2 = getColorPixelFromImage(image2, i, square2.height * 2 + j);
-
-            if (compareRGBA(color1, color2)) {
-                sumCompare += 1;
-            }
-        }
-
-    for (var i = 0; i < defaultSquare.width; i++)
-        for (var j = 0; j < defaultSquare.height; j++) {
-            const color1 = getColorPixelFromImage(image1, square1.width * 2 + i, square1.height * 2 + j);
-            const color2 = getColorPixelFromImage(image2, square2.width * 2 + i, square2.height * 2 + j);
-
-            if (compareRGBA(color1, color2)) {
-                sumCompare += 1;
-            }
-        }
-
-    return `Five Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height * 5)*100).toFixed(2)} %`;
+    return `Five Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height * 5) * 100).toFixed(2)} %`;
 }
 
 
