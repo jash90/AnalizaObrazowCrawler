@@ -96,12 +96,83 @@ var oneSquare = async function (imagePath, secondImagePath) {
             }
         }
 
-    console.log(sumCompare, defaultSquare.width * defaultSquare.height);
+        return `One Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height)*100).toFixed(2)} %`;
+}
+
+var fiveSquare = async function (imagePath, secondImagePath) {
+    const image1 = await Jimp.read(imagePath);
+    const image2 = await Jimp.read(secondImagePath);
+
+    const image1Size = calculateSize(image1.bitmap);
+    const image2Size = calculateSize(image2.bitmap);
+
+    const square1 = calculateSquare(image1Size);
+
+    const square2 = calculateSquare(image2Size);
+
+    const defaultSquare = compareSquare(square1, square2);
+
+    var sumCompare = 0;
+
+
+    for (var i = 0; i < defaultSquare.width; i++)
+        for (var j = 0; j < defaultSquare.height; j++) {
+            const color1 = getColorPixelFromImage(image1, i, j);
+            const color2 = getColorPixelFromImage(image2, i, j);
+
+            if (compareRGBA(color1, color2)) {
+                sumCompare += 1;
+            }
+        }
+
+    for (var i = 0; i < defaultSquare.width; i++)
+        for (var j = 0; j < defaultSquare.height; j++) {
+            const color1 = getColorPixelFromImage(image1, square1.width + i, square1.height + j);
+            const color2 = getColorPixelFromImage(image2, square2.width + i, square2.height + j);
+
+            if (compareRGBA(color1, color2)) {
+                sumCompare += 1;
+            }
+        }
+
+
+    for (var i = 0; i < defaultSquare.width; i++)
+        for (var j = 0; j < defaultSquare.height; j++) {
+            const color1 = getColorPixelFromImage(image1, square1.width * 2 + i, j);
+            const color2 = getColorPixelFromImage(image2, square2.width * 2 + i, j);
+
+            if (compareRGBA(color1, color2)) {
+                sumCompare += 1;
+            }
+        }
+
+    for (var i = 0; i < defaultSquare.width; i++)
+        for (var j = 0; j < defaultSquare.height; j++) {
+            const color1 = getColorPixelFromImage(image1, i, square1.height * 2 + j);
+            const color2 = getColorPixelFromImage(image2, i, square2.height * 2 + j);
+
+            if (compareRGBA(color1, color2)) {
+                sumCompare += 1;
+            }
+        }
+
+    for (var i = 0; i < defaultSquare.width; i++)
+        for (var j = 0; j < defaultSquare.height; j++) {
+            const color1 = getColorPixelFromImage(image1, square1.width * 2 + i, square1.height * 2 + j);
+            const color2 = getColorPixelFromImage(image2, square2.width * 2 + i, square2.height * 2 + j);
+
+            if (compareRGBA(color1, color2)) {
+                sumCompare += 1;
+            }
+        }
+
+    return `Five Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height * 5)*100).toFixed(2)} %`;
 }
 
 
-var main = function () {
-    oneSquare("images/img2.jpeg", "images/img4.jpeg");
+var main = async function () {
+    console.log(await oneSquare("images/img2.jpeg", "images/img4.jpeg"));
+    console.log(await fiveSquare("images/img2.jpeg", "images/img4.jpeg"));
 
 }
 
