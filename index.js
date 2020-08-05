@@ -208,8 +208,30 @@ var greyScale = async function (imagePath, secondImagePath) {
     console.log(random(image1, image2));
 }
 
+var blur = async function (imagePath, secondImagePath, r) {
+    const image1 = await (await Jimp.read(imagePath)).blur(r);
+    const image2 = await (await Jimp.read(secondImagePath)).blur(r);
+
+    console.log(`[ Blur ${r}]`);
+    console.log(oneSquare(image1, image2));
+    console.log(fiveSquare(image1, image2));
+    console.log(bigSquare(image1, image2));
+    console.log(random(image1, image2));
+}
+
+var gaussianBlur = async function (imagePath, secondImagePath, r) {
+    const image1 = await (await Jimp.read(imagePath)).gaussian(r);
+    const image2 = await (await Jimp.read(secondImagePath)).gaussian(r);
+
+    console.log(`[ Gaussian Blur ${r}]`);
+    console.log(oneSquare(image1, image2));
+    console.log(fiveSquare(image1, image2));
+    console.log(bigSquare(image1, image2));
+    console.log(random(image1, image2));
+}
+
 var main = async function () {
-    await greyScale("images/img1.jpeg", "images/img4.jpeg");
+    await gaussianBlur("images/img2.jpeg", "images/img4.jpeg", 10);
 
 }
 
