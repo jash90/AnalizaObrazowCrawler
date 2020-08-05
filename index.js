@@ -252,6 +252,26 @@ var binary = async function (imagePath, secondImagePath) {
     console.log(random(image1, image2));
 }
 
+var sharpen = async function (imagePath, secondImagePath) {
+    const testPath1 = "testsharpen1.jpeg";
+    const testPath2 = "testsharpen2.jpeg";
+
+
+    await sharp(imagePath).sharpen(1, 1, 1).jpeg({ quality: 100 }).toFile(testPath1);
+    await sharp(secondImagePath).sharpen(1, 1, 1).jpeg({ quality: 100 }).toFile(testPath2);
+    const image1 = await Jimp.read(testPath1);
+    const image2 = await Jimp.read(testPath2);
+
+
+    console.log(`[ Sharpen ]`);
+    console.log(oneSquare(image1, image2));
+    console.log(fiveSquare(image1, image2));
+    console.log(bigSquare(image1, image2));
+    console.log(random(image1, image2));
+
+    await fs.unlinkSync(testPath1);
+    await fs.unlinkSync(testPath2);
+}
 
 var main = async function () {
     // for (var i = 1; i < 126; i++)
