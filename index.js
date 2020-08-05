@@ -5,6 +5,8 @@ var url = require('url');
 
 var Jimp = require('jimp');
 
+const sharp = require('sharp');
+
 const downloadUrl = "http://192.168.64.2/gallery1.html";
 
 const baseUrl = url.parse(downloadUrl).hostname;
