@@ -197,18 +197,7 @@ var normalize = async function (imagePath, secondImagePath) {
     console.log(random(image1, image2));
 }
 
-var greyScale = async function (imagePath, secondImagePath) {
-    const image1 = await (await Jimp.read(imagePath)).greyscale();
-    const image2 = await (await Jimp.read(secondImagePath)).greyscale();;
-
-    console.log("[ Grey Scale ]");
-    console.log(oneSquare(image1, image2));
-    console.log(fiveSquare(image1, image2));
-    console.log(bigSquare(image1, image2));
-    console.log(random(image1, image2));
-}
-
-var blur = async function (imagePath, secondImagePath, r) {
+var blur = async function (imagePath, secondImagePath, r = 10) {
     const image1 = await (await Jimp.read(imagePath)).blur(r);
     const image2 = await (await Jimp.read(secondImagePath)).blur(r);
 
@@ -219,7 +208,7 @@ var blur = async function (imagePath, secondImagePath, r) {
     console.log(random(image1, image2));
 }
 
-var gaussianBlur = async function (imagePath, secondImagePath, r) {
+var gaussianBlur = async function (imagePath, secondImagePath, r = 10) {
     const image1 = await (await Jimp.read(imagePath)).gaussian(r);
     const image2 = await (await Jimp.read(secondImagePath)).gaussian(r);
 
