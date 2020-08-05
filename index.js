@@ -241,7 +241,16 @@ var removeNoise = async function (imagePath, secondImagePath) {
     console.log(random(image1, image2));
 }
 
+var binary = async function (imagePath, secondImagePath) {
+    const image1 = await (await Jimp.read(imagePath)).rgba(false).greyscale().contrast(1).posterize(2);
+    const image2 = await (await Jimp.read(secondImagePath)).rgba(false).greyscale().contrast(1).posterize(2);
 
+    console.log(`[ Binary ]`);
+    console.log(oneSquare(image1, image2));
+    console.log(fiveSquare(image1, image2));
+    console.log(bigSquare(image1, image2));
+    console.log(random(image1, image2));
+}
 
 
 var main = async function () {
