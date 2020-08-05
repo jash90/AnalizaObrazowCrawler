@@ -231,8 +231,8 @@ var dither = async function (imagePath, secondImagePath) {
 }
 
 var removeNoise = async function (imagePath, secondImagePath) {
-    const image1 =  await (await (await Jimp.read(imagePath)).color([{ apply: 'desaturate', params: [90] }])).contrast(1);
-    const image2 =  await (await (await Jimp.read(secondImagePath)).color([{ apply: 'desaturate', params: [90] }])).contrast(1);
+    const image1 = await (await (await Jimp.read(imagePath)).color([{ apply: 'desaturate', params: [90] }])).contrast(1);
+    const image2 = await (await (await Jimp.read(secondImagePath)).color([{ apply: 'desaturate', params: [90] }])).contrast(1);
 
     console.log(`[ Remove Noise ]`);
     console.log(oneSquare(image1, image2));
