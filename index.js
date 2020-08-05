@@ -95,9 +95,7 @@ const compareRGBA = function (color1, color2) {
     return true;
 }
 
-var oneSquare = async function (imagePath, secondImagePath) {
-    const image1 = await Jimp.read(imagePath);
-    const image2 = await Jimp.read(secondImagePath);
+var oneSquare = function (image1, image2) {
 
     const defaultSquare = getDefaultSquare(image1, image2);
 
@@ -111,9 +109,7 @@ var oneSquare = async function (imagePath, secondImagePath) {
     return `One Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2)} %`;
 }
 
-var fiveSquare = async function (imagePath, secondImagePath) {
-    const image1 = await Jimp.read(imagePath);
-    const image2 = await Jimp.read(secondImagePath);
+var fiveSquare = function (image1, image2) {
 
     const defaultSquare = getDefaultSquare(image1, image2);
 
@@ -132,9 +128,7 @@ var fiveSquare = async function (imagePath, secondImagePath) {
     return `Five Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height * 5) * 100).toFixed(2)} %`;
 }
 
-var bigSquare = async function (imagePath, secondImagePath) {
-    const image1 = await Jimp.read(imagePath);
-    const image2 = await Jimp.read(secondImagePath);
+var bigSquare = function (image1, image2) {
 
     const defaultSquare = getBigDefaultSquare(image1, image2);
 
@@ -148,10 +142,7 @@ var bigSquare = async function (imagePath, secondImagePath) {
     return `Big Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2)} %`;
 }
 
-var random = async function (imagePath, secondImagePath) {
-    const image1 = await Jimp.read(imagePath);
-    const image2 = await Jimp.read(secondImagePath);
-
+var random = function (image1, image2) {
     const square = getBigDefaultSquare(image1, image2);
 
     const countPixels = square.width * square.height;
@@ -167,7 +158,7 @@ var random = async function (imagePath, secondImagePath) {
         if (pixelsToCompare.filter(f => f.x == x && f.y == y).length < 1) {
             pixelsToCompare.push({ x, y });
         }
-        
+
         process.stdout.write(`\rLoading ${h[i++]} ${(pixelsToCompare.length / countPixels * 100).toFixed(2)}%    `);
         i &= h.length - 1;
 
@@ -184,11 +175,41 @@ var random = async function (imagePath, secondImagePath) {
     return `Random Compare : Similarity ${(sumCompare / pixelsToCompare.length * 100).toFixed(2)} %`;
 }
 
+var greyScale = async function (imagePath, secondImagePath) {
+    const image1 = await (await Jimp.read(imagePath)).grayscale();
+    const image2 = await (await Jimp.read(secondImagePath)).grayscale();;
+
+    console.log("[ Grey Scale ]");
+    console.log(oneSquare(image1, image2));
+    console.log(fiveSquare(image1, image2));
+    console.log(bigSquare(image1, image2));
+    console.log(random(image1, image2));
+}
+
+var normalize = async function (imagePath, secondImagePath) {
+    const image1 = await (await Jimp.read(imagePath)).normalize();
+    const image2 = await (await Jimp.read(secondImagePath)).normalize();;
+
+    console.log("[ Normalize ]");
+    console.log(oneSquare(image1, image2));
+    console.log(fiveSquare(image1, image2));
+    console.log(bigSquare(image1, image2));
+    console.log(random(image1, image2));
+}
+
+var greyScale = async function (imagePath, secondImagePath) {
+    const image1 = await (await Jimp.read(imagePath)).greyscale();
+    const image2 = await (await Jimp.read(secondImagePath)).greyscale();;
+
+    console.log("[ Grey Scale ]");
+    console.log(oneSquare(image1, image2));
+    console.log(fiveSquare(image1, image2));
+    console.log(bigSquare(image1, image2));
+    console.log(random(image1, image2));
+}
+
 var main = async function () {
-    console.log(await oneSquare("images/img2.jpeg", "images/img4.jpeg"));
-    console.log(await fiveSquare("images/img2.jpeg", "images/img4.jpeg"));
-    console.log(await bigSquare("images/img2.jpeg", "images/img4.jpeg"));
-    console.log(await random("images/img2.jpeg", "images/img4.jpeg"));
+    await greyScale("images/img1.jpeg", "images/img4.jpeg");
 
 }
 
