@@ -219,8 +219,31 @@ var gaussianBlur = async function (imagePath, secondImagePath, r = 10) {
     console.log(random(image1, image2));
 }
 
+var Dither = async function (imagePath, secondImagePath) {
+    const image1 = await (await Jimp.read(imagePath)).dither565();
+    const image2 = await (await Jimp.read(secondImagePath)).dither565();
+
+    console.log(`[ Dither ]`);
+    console.log(oneSquare(image1, image2));
+    console.log(fiveSquare(image1, image2));
+    console.log(bigSquare(image1, image2));
+    console.log(random(image1, image2));
+}
+
 var main = async function () {
-    await gaussianBlur("images/img2.jpeg", "images/img4.jpeg", 10);
+    for (var i = 1; i < 126; i++)
+    for (var j = 1; j < 126; j++) {
+        if (i != j) {
+            const image1 = `images/img${i}.jpeg`;
+            const image2 = `images/img${j}.jpeg`;
+
+            await greyScale(image1, image2);
+            await normalize(image1, image2);
+            await blur(image1, image2);
+            await gaussianBlur(image1, image2);
+        }
+    }
+
 
 }
 
