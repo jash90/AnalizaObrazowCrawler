@@ -61,30 +61,14 @@ const getColorPixelFromImage = function (image, width, height) {
 }
 
 const getDefaultSquare = function (image1, image2) {
-
-    const image1Size = calculateSize(image1.bitmap);
-    const image2Size = calculateSize(image2.bitmap);
-
-    const square1 = calculateSquare(image1Size);
-
-    const square2 = calculateSquare(image2Size);
-
-    return compareSquare(square1, square2);
+    return compareSquare(calculateSquare(calculateSize(image1.bitmap)), calculateSquare(calculateSize(image2.bitmap)));
 }
 
 const getBigDefaultSquare = function (image1, image2) {
-
-    const image1Size = calculateSize(image1.bitmap);
-    const image2Size = calculateSize(image2.bitmap);
-
-    const square1 = calculateBigSquare(image1Size);
-
-    const square2 = calculateBigSquare(image2Size);
-
-    return compareSquare(square1, square2);
+    return compareSquare(calculateBigSquare(calculateSize(image1.bitmap)), calculateBigSquare(calculateSize(image2.bitmap)));
 }
 
-const compareImages = function (image1, image2, x, y, sumCompare) {
+const compareImages = function (image1, image2, x, y) {
     const color1 = getColorPixelFromImage(image1, x, y);
     const color2 = getColorPixelFromImage(image2, x, y);
 
@@ -137,11 +121,11 @@ var fiveSquare = async function (imagePath, secondImagePath) {
 
     for (var i = 0; i < defaultSquare.width; i++)
         for (var j = 0; j < defaultSquare.height; j++) {
-            sumCompare = sumCompare + compareImages(image1, image2, i, j, sumCompare) +
-                compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j, sumCompare) +
-                compareImages(image1, image2, defaultSquare.width * 2 + i, j, sumCompare) +
-                compareImages(image1, image2, i, defaultSquare.height * 2 + j, sumCompare) +
-                compareImages(image1, image2, defaultSquare.width * 2 + i, defaultSquare.height * 2 + j, sumCompare);
+            sumCompare = sumCompare + compareImages(image1, image2, i, j) +
+                compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j) +
+                compareImages(image1, image2, defaultSquare.width * 2 + i, j) +
+                compareImages(image1, image2, i, defaultSquare.height * 2 + j) +
+                compareImages(image1, image2, defaultSquare.width * 2 + i, defaultSquare.height * 2 + j);
 
         }
 
@@ -158,16 +142,53 @@ var bigSquare = async function (imagePath, secondImagePath) {
 
     for (var i = 0; i < defaultSquare.width; i++)
         for (var j = 0; j < defaultSquare.height; j++) {
-            sumCompare = sumCompare + compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j, sumCompare);
+            sumCompare = sumCompare + compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j);
         }
 
     return `Big Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2)} %`;
+}
+
+var random = async function (imagePath, secondImagePath) {
+    const image1 = await Jimp.read(imagePath);
+    const image2 = await Jimp.read(secondImagePath);
+
+    const square = getBigDefaultSquare(image1, image2);
+
+    const countPixels = square.width * square.height;
+
+    const defaultSquare = compareSquare(calculateSize(image1.bitmap), calculateSize(image2.bitmap));
+
+    let pixelsToCompare = [];
+    var h = ['|', '/', '-', '\\'];
+    var i = 0;
+    while (pixelsToCompare.length < countPixels) {
+        const x = Number((Math.random() * defaultSquare.width).toFixed(0));
+        const y = Number((Math.random() * defaultSquare.height).toFixed(0));
+        if (pixelsToCompare.filter(f => f.x == x && f.y == y).length < 1) {
+            pixelsToCompare.push({ x, y });
+        }
+        
+        process.stdout.write(`\rLoading ${h[i++]} ${(pixelsToCompare.length / countPixels * 100).toFixed(2)}%    `);
+        i &= h.length - 1;
+
+    }
+
+    process.stdout.write("\r");
+
+    var sumCompare = 0;
+
+    for (var i = 0; i < pixelsToCompare.length; i++) {
+        sumCompare = sumCompare + compareImages(image1, image2, pixelsToCompare[i].x, pixelsToCompare[i].y);
+    }
+
+    return `Random Compare : Similarity ${(sumCompare / pixelsToCompare.length * 100).toFixed(2)} %`;
 }
 
 var main = async function () {
     console.log(await oneSquare("images/img2.jpeg", "images/img4.jpeg"));
     console.log(await fiveSquare("images/img2.jpeg", "images/img4.jpeg"));
     console.log(await bigSquare("images/img2.jpeg", "images/img4.jpeg"));
+    console.log(await random("images/img2.jpeg", "images/img4.jpeg"));
 
 }
 
