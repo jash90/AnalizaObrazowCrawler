@@ -5,6 +5,10 @@ var url = require('url');
 
 var Jimp = require('jimp');
 
+const { Image } = require('image-js');
+
+var flatMap = require('array.prototype.flatmap');
+
 const sharp = require('sharp');
 
 const downloadUrl = "http://192.168.64.2/gallery1.html";
@@ -275,19 +279,26 @@ var sharpen = async function (imagePath, secondImagePath) {
     await fs.unlinkSync(testPath2);
 }
 
+var histogram = async function (imagePath, secondImagePath) {
+    const image1 = await Image.load(imagePath);
+    const image2 = await Image.load(secondImagePath);
+    const image1Histogram = image1.getHistograms();
+    const image2Histogram = image2.getHistograms();
+
+    var sumCompare = 0;
+
+    for (var i = 0; i < image1Histogram.length; i++)
+        for (var j = 0; j < image1Histogram[i].length; j++) {
+            if (image1Histogram[i][j] === image2Histogram[i][j]) {
+                sumCompare = sumCompare + 1;
+            }
+        }
+
+    console.log(`Histogram Compare : Similarity ${(sumCompare / flatMap(image1Histogram, (x) => x).length * 100).toFixed(2)} %`);
+
+}
+
 var main = async function () {
-    // for (var i = 1; i < 126; i++)
-    //     for (var j = 1; j < 126; j++) {
-    //         if (i != j) {
-    const image1 = `images/img21.jpeg`;
-    const image2 = `images/img4.jpeg`;
-
-    //             await normalize(image1, image2);
-    //             await blur(image1, image2);
-    await removeNoise(image1, image2);
-    //    }
-    //  }
-
 
 }
 
