@@ -33,7 +33,7 @@ const downloadAllFile = function () {
 
 
         root.querySelectorAll('img').forEach((img, index) => {
-            download("http://" + baseUrl + "/" + img.rawAttributes.src, `${defaultFolderImage}/img` + Number(index + 1) + ".jpeg", function () {
+            downloadSingleFile("http://" + baseUrl + "/" + img.rawAttributes.src, `${defaultFolderImage}/img` + Number(index + 1) + ".jpeg", function () {
                 console.log('done img' + Number(index + 1) + ".jpeg");
             });
         })
