@@ -300,6 +300,11 @@ var histogram = async function (imagePath, secondImagePath) {
 
 var main = async function () {
 
+    const image1 = `images/img2.jpeg`;
+    const image2 = `images/img1.jpeg`;
+
+    await histogram(image1, image2);
+
 }
 
 main()
