@@ -29,6 +29,11 @@ const downloadSingleFile = function (uri, filename, callback) {
 };
 
 const downloadAllFile = function () {
+    if (fs.existsSync(defaultFolderImage) && fs.lstatSync(defaultFolderImage).size > 1000) {
+        return;
+    }
+
+
     request(downloadUrl, (err, res, body) => {
         const root = nodeparse.parse(String(res.body));
 
@@ -42,6 +47,8 @@ const downloadAllFile = function () {
                 console.log('done img' + Number(index + 1) + ".jpeg");
             });
         })
+
+        console.log("Download Complete.");
     })
 }
 
@@ -209,7 +216,7 @@ var histogram = async function (imagePath, secondImagePath) {
 
     for (var i = 0; i < image1Histogram.length; i++)
         for (var j = 0; j < image1Histogram[i].length; j++) {
-            if (Math.abs(image1Histogram[i][j] - image2Histogram[i][j]) <= countHistogram*0.1) {
+            if (Math.abs(image1Histogram[i][j] - image2Histogram[i][j]) <= countHistogram * 0.1) {
                 sumCompare = sumCompare + 1;
             }
         }
@@ -341,6 +348,8 @@ var similarity = async function (imagePath, secondImagePath) {
 
 
 var main = async function () {
+
+    downloadAllFile();
     const image1 = "images/img1.jpeg";
     const image2 = "images/img122.jpeg";
     await similarity(image1, image2);
