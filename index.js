@@ -348,7 +348,6 @@ var similarity = async function (imagePath, secondImagePath) {
 
 
 var main = async function () {
-
     downloadAllFile();
     const image1 = "images/img1.jpeg";
     const image2 = "images/img122.jpeg";
