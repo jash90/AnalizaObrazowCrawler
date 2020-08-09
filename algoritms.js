@@ -1,57 +1,79 @@
+const MathAlgoritm = require("./math");
+const flatMap = require('array.prototype.flatmap');
+const Fs = require('fs');
+const Jimp = require('jimp');
+const { Image } = require('image-js');
+const Sharp = require('sharp');
 
-var oneSquare = function (image1, image2) {
+const testPath1 = "test1.jpeg";
+const testPath2 = "test2.jpeg";
 
-    const defaultSquare = getDefaultSquare(image1, image2);
 
-    var sumCompare = 0;
+var oneSquare = function (name, image1, image2) {
 
-    for (var i = 0; i < defaultSquare.width; i++)
-        for (var j = 0; j < defaultSquare.height; j++) {
-            sumCompare = sumCompare + compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j);
-        }
-
-    return `One Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2)} %`;
-}
-
-var fiveSquare = function (image1, image2) {
-
-    const defaultSquare = getDefaultSquare(image1, image2);
+    const defaultSquare = MathAlgoritm.getDefaultSquare(image1, image2);
 
     var sumCompare = 0;
 
     for (var i = 0; i < defaultSquare.width; i++)
         for (var j = 0; j < defaultSquare.height; j++) {
-            sumCompare = sumCompare + compareImages(image1, image2, i, j) +
-                compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j) +
-                compareImages(image1, image2, defaultSquare.width * 2 + i, j) +
-                compareImages(image1, image2, i, defaultSquare.height * 2 + j) +
-                compareImages(image1, image2, defaultSquare.width * 2 + i, defaultSquare.height * 2 + j);
-
+            sumCompare = sumCompare + MathAlgoritm.compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j);
         }
 
-    return `Five Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height * 5) * 100).toFixed(2)} %`;
+    const similarity = (sumCompare / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2);
+
+    console.log(`One Square Compare : Similarity ${similarity} %`);
+
+    return { name: `${name} one square`, similarity };
 }
 
-var bigSquare = function (image1, image2) {
+var fiveSquare = function (name, image1, image2) {
 
-    const defaultSquare = getBigDefaultSquare(image1, image2);
+    const defaultSquare = MathAlgoritm.getDefaultSquare(image1, image2);
 
     var sumCompare = 0;
 
     for (var i = 0; i < defaultSquare.width; i++)
         for (var j = 0; j < defaultSquare.height; j++) {
-            sumCompare = sumCompare + compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j);
+            sumCompare = sumCompare + MathAlgoritm.compareImages(image1, image2, i, j) +
+                MathAlgoritm.compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j) +
+                MathAlgoritm.compareImages(image1, image2, defaultSquare.width * 2 + i, j) +
+                MathAlgoritm.compareImages(image1, image2, i, defaultSquare.height * 2 + j) +
+                MathAlgoritm.compareImages(image1, image2, defaultSquare.width * 2 + i, defaultSquare.height * 2 + j);
+
         }
 
-    return `Big Square Compare : Similarity ${(sumCompare / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2)} %`;
+    const similarity = (sumCompare / (defaultSquare.width * defaultSquare.height * 5) * 100).toFixed(2);
+
+    console.log(`Five Square Compare : Similarity ${similarity} %`);
+
+    return { name: `${name} five square`, similarity };
 }
 
-var random = function (image1, image2) {
-    const square = getBigDefaultSquare(image1, image2);
+var bigSquare = function (name, image1, image2) {
+
+    const defaultSquare = MathAlgoritm.getBigDefaultSquare(image1, image2);
+
+    var sumCompare = 0;
+
+    for (var i = 0; i < defaultSquare.width; i++)
+        for (var j = 0; j < defaultSquare.height; j++) {
+            sumCompare = sumCompare + MathAlgoritm.compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j);
+        }
+
+    const similarity = (sumCompare / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2);
+
+    console.log(`Big Square Compare : Similarity ${similarity} %`);
+
+    return { name: `${name} big square`, similarity };
+}
+
+var random = function (name, image1, image2) {
+    const square = MathAlgoritm.getBigDefaultSquare(image1, image2);
 
     const countPixels = square.width * square.height;
 
-    const defaultSquare = compareSquare(calculateSize(image1.bitmap), calculateSize(image2.bitmap));
+    const defaultSquare = MathAlgoritm.compareSquare(MathAlgoritm.calculateSize(image1.bitmap), MathAlgoritm.calculateSize(image2.bitmap));
 
     let pixelsToCompare = [];
     var h = ['|', '/', '-', '\\'];
@@ -76,13 +98,17 @@ var random = function (image1, image2) {
     var sumCompare = 0;
 
     for (var i = 0; i < pixelsToCompare.length; i++) {
-        sumCompare = sumCompare + compareImages(image1, image2, pixelsToCompare[i].x, pixelsToCompare[i].y);
+        sumCompare = sumCompare + MathAlgoritm.compareImages(image1, image2, pixelsToCompare[i].x, pixelsToCompare[i].y);
     }
 
-    return `Random Compare : Similarity ${(sumCompare / pixelsToCompare.length * 100).toFixed(2)} %`;
+    const similarity = (sumCompare / pixelsToCompare.length * 100).toFixed(2);
+
+    console.log(`Random Compare : Similarity ${similarity} %`);
+
+    return { name: `${name} random`, similarity };
 }
 
-var histogram = async function (imagePath, secondImagePath) {
+var histogram = async function (name, imagePath, secondImagePath) {
     const image1 = await Image.load(imagePath);
     const image2 = await Image.load(secondImagePath);
     const image1Histogram = image1.getHistograms();
@@ -98,7 +124,11 @@ var histogram = async function (imagePath, secondImagePath) {
             }
         }
 
-    return `Histogram Compare : Similarity ${(sumCompare / countHistogram * 100).toFixed(2)} %`;
+    const similarity = (sumCompare / countHistogram * 100).toFixed(2);
+
+    console.log(`Histogram Compare : Similarity ${similarity} %`);
+
+    return { name: `${name} histogram`, similarity };
 }
 
 var compareAll = async function (name, imagePath, secondImagePath) {
@@ -106,11 +136,11 @@ var compareAll = async function (name, imagePath, secondImagePath) {
     const image2 = await Jimp.read(secondImagePath);
 
     console.log(`[ ${name} ]`);
-    console.log(oneSquare(image1, image2));
-    console.log(fiveSquare(image1, image2));
-    console.log(bigSquare(image1, image2));
-    console.log(random(image1, image2));
-    console.log(await histogram(imagePath, secondImagePath));
+    console.log(oneSquare(name, image1, image2));
+    console.log(fiveSquare(name, image1, image2));
+    console.log(bigSquare(name, image1, image2));
+    console.log(random(name, image1, image2));
+    console.log(await histogram(name, imagePath, secondImagePath));
 }
 
 var greyScale = async function (imagePath, secondImagePath) {
@@ -119,8 +149,8 @@ var greyScale = async function (imagePath, secondImagePath) {
 
     await compareAll("Grey Scale", testPath1, testPath2);
 
-    await fs.unlinkSync(testPath1);
-    await fs.unlinkSync(testPath2);
+    await Fs.unlinkSync(testPath1);
+    await Fs.unlinkSync(testPath2);
 }
 
 var normalize = async function (imagePath, secondImagePath) {
@@ -129,8 +159,8 @@ var normalize = async function (imagePath, secondImagePath) {
 
     await compareAll("Normalize", testPath1, testPath2);
 
-    await fs.unlinkSync(testPath1);
-    await fs.unlinkSync(testPath2);
+    await Fs.unlinkSync(testPath1);
+    await Fs.unlinkSync(testPath2);
 }
 
 var blur = async function (imagePath, secondImagePath, r = 10) {
@@ -139,8 +169,8 @@ var blur = async function (imagePath, secondImagePath, r = 10) {
 
     await compareAll(`Blur ratio ${r}`, testPath1, testPath2);
 
-    await fs.unlinkSync(testPath1);
-    await fs.unlinkSync(testPath2);
+    await Fs.unlinkSync(testPath1);
+    await Fs.unlinkSync(testPath2);
 }
 
 var gaussianBlur = async function (imagePath, secondImagePath, r = 10) {
@@ -149,8 +179,8 @@ var gaussianBlur = async function (imagePath, secondImagePath, r = 10) {
 
     await compareAll(`Gaussian Blur ratio ${r}`, testPath1, testPath2);
 
-    await fs.unlinkSync(testPath1);
-    await fs.unlinkSync(testPath2);
+    await Fs.unlinkSync(testPath1);
+    await Fs.unlinkSync(testPath2);
 }
 
 var dither = async function (imagePath, secondImagePath) {
@@ -159,8 +189,8 @@ var dither = async function (imagePath, secondImagePath) {
 
     await compareAll(`Dither`, testPath1, testPath2);
 
-    await fs.unlinkSync(testPath1);
-    await fs.unlinkSync(testPath2);
+    await Fs.unlinkSync(testPath1);
+    await Fs.unlinkSync(testPath2);
 }
 
 var removeNoise = async function (imagePath, secondImagePath) {
@@ -176,8 +206,8 @@ var removeNoise = async function (imagePath, secondImagePath) {
 
     await compareAll(`Remove noise`, testPath1, testPath2);
 
-    await fs.unlinkSync(testPath1);
-    await fs.unlinkSync(testPath2);
+    await Fs.unlinkSync(testPath1);
+    await Fs.unlinkSync(testPath2);
 }
 
 var binary = async function (imagePath, secondImagePath) {
@@ -187,22 +217,22 @@ var binary = async function (imagePath, secondImagePath) {
 
     await compareAll(`Binary`, testPath1, testPath2);
 
-    await fs.unlinkSync(testPath1);
-    await fs.unlinkSync(testPath2);
+    await Fs.unlinkSync(testPath1);
+    await Fs.unlinkSync(testPath2);
 }
 
 var sharpen = async function (imagePath, secondImagePath) {
-    await sharp(imagePath).sharpen(1, 1, 1).jpeg({
+    await Sharp(imagePath).sharpen(1, 1, 1).jpeg({
         quality: 100
     }).toFile(testPath1);
-    await sharp(secondImagePath).sharpen(1, 1, 1).jpeg({
+    await Sharp(secondImagePath).sharpen(1, 1, 1).jpeg({
         quality: 100
     }).toFile(testPath2);
 
     await compareAll(`Sharpen`, testPath1, testPath2);
 
-    await fs.unlinkSync(testPath1);
-    await fs.unlinkSync(testPath2);
+    await Fs.unlinkSync(testPath1);
+    await Fs.unlinkSync(testPath2);
 }
 
 var normal = async function (imagePath, secondImagePath) {
@@ -223,5 +253,5 @@ var similarity = async function (imagePath, secondImagePath) {
 }
 
 module.exports = {
-    oneSquare, fiveSquare, bigSquare, random,histogram, compareAll, greyScale, normalize, blur, gaussianBlur, dither, removeNoise, binary, sharpen, normal, similarity
+    oneSquare, fiveSquare, bigSquare, random, histogram, compareAll, greyScale, normalize, blur, gaussianBlur, dither, removeNoise, binary, sharpen, normal, similarity
 };

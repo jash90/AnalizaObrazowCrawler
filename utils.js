@@ -1,37 +1,42 @@
+const axios = require("axios");
+const NodeParse = require("node-html-parser");
+const Fs = require('fs');
+const Url = require('url');
+
 const downloadUrl = "http://192.168.64.2/gallery1.html";
-
-const baseUrl = url.parse(downloadUrl).hostname;
-
+const baseUrl = Url.parse(downloadUrl).hostname;
 const defaultFolderImage = "images";
 
-const downloadSingleFile = function (uri, filename, callback) {
-    request.head(uri, function () {
-        request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
-    });
+const downloadSingleFile = async function (uri, filename, callback) {
+    try {
+        const response = await axios.default({ url: uri, responseType: "stream" });
+        response.data.pipe(Fs.createWriteStream(filename));
+        console.log(`done ${filename}`);
+    } catch (error) {
+        console.log(error);
+    }
+
 };
 
-const downloadAllFile = function () {
-    if (fs.existsSync(defaultFolderImage) && fs.lstatSync(defaultFolderImage).size > 1000) {
+const downloadAllFile = async function () {
+    if (Fs.existsSync(defaultFolderImage) && Fs.lstatSync(defaultFolderImage).size > 1000) {
         return;
     }
 
+    if (!Fs.existsSync(defaultFolderImage)) {
+        Fs.mkdirSync(defaultFolderImage);
+    }
 
-    request(downloadUrl, (err, res, body) => {
-        const root = nodeparse.parse(String(res.body));
+    const { data } = await axios.get(downloadUrl);
+    const links = NodeParse.parse(String(data));
 
-        if (!fs.existsSync(defaultFolderImage)) {
-            fs.mkdirSync(defaultFolderImage);
-        }
+    const files = links.querySelectorAll('img');
+    for (var i = 0; i < files.length; i++)
+        await downloadSingleFile("http://" + baseUrl + "/" + files[i].rawAttributes.src, `${defaultFolderImage}/img` + Number(i + 1) + ".jpeg");
 
 
-        root.querySelectorAll('img').forEach((img, index) => {
-            downloadSingleFile("http://" + baseUrl + "/" + img.rawAttributes.src, `${defaultFolderImage}/img` + Number(index + 1) + ".jpeg", function () {
-                console.log('done img' + Number(index + 1) + ".jpeg");
-            });
-        })
+    console.log("Download Complete.");
 
-        console.log("Download Complete.");
-    })
 }
 
-module.exports = {downloadAllFile};
+module.exports = { downloadAllFile };

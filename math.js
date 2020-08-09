@@ -1,3 +1,4 @@
+const Jimp = require('jimp');
 
 const calculateSize = function (bitmap) {
     return {
@@ -70,5 +71,5 @@ const compareRGBA = function (color1, color2) {
 }
 
 module.exports = {
-    getDefaultSquare,compareImages,calculateSize,calculateBigSquare, getBigDefaultSquare
+    getDefaultSquare, compareImages, calculateSize, calculateBigSquare, getBigDefaultSquare, compareSquare
 }
