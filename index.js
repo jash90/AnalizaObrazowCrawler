@@ -181,104 +181,6 @@ var random = function (image1, image2) {
     return `Random Compare : Similarity ${(sumCompare / pixelsToCompare.length * 100).toFixed(2)} %`;
 }
 
-var greyScale = async function (imagePath, secondImagePath) {
-    const image1 = await (await Jimp.read(imagePath)).grayscale();
-    const image2 = await (await Jimp.read(secondImagePath)).grayscale();;
-
-    console.log("[ Grey Scale ]");
-    console.log(oneSquare(image1, image2));
-    console.log(fiveSquare(image1, image2));
-    console.log(bigSquare(image1, image2));
-    console.log(random(image1, image2));
-}
-
-var normalize = async function (imagePath, secondImagePath) {
-    const image1 = await (await Jimp.read(imagePath)).normalize();
-    const image2 = await (await Jimp.read(secondImagePath)).normalize();;
-
-    console.log("[ Normalize ]");
-    console.log(oneSquare(image1, image2));
-    console.log(fiveSquare(image1, image2));
-    console.log(bigSquare(image1, image2));
-    console.log(random(image1, image2));
-}
-
-var blur = async function (imagePath, secondImagePath, r = 10) {
-    const image1 = await (await Jimp.read(imagePath)).blur(r);
-    const image2 = await (await Jimp.read(secondImagePath)).blur(r);
-
-    console.log(`[ Blur ${r}]`);
-    console.log(oneSquare(image1, image2));
-    console.log(fiveSquare(image1, image2));
-    console.log(bigSquare(image1, image2));
-    console.log(random(image1, image2));
-}
-
-var gaussianBlur = async function (imagePath, secondImagePath, r = 10) {
-    const image1 = await (await Jimp.read(imagePath)).gaussian(r);
-    const image2 = await (await Jimp.read(secondImagePath)).gaussian(r);
-
-    console.log(`[ Gaussian Blur ${r}]`);
-    console.log(oneSquare(image1, image2));
-    console.log(fiveSquare(image1, image2));
-    console.log(bigSquare(image1, image2));
-    console.log(random(image1, image2));
-}
-
-var dither = async function (imagePath, secondImagePath) {
-    const image1 = await (await Jimp.read(imagePath)).dither565();
-    const image2 = await (await Jimp.read(secondImagePath)).dither565();
-
-    console.log(`[ Dither ]`);
-    console.log(oneSquare(image1, image2));
-    console.log(fiveSquare(image1, image2));
-    console.log(bigSquare(image1, image2));
-    console.log(random(image1, image2));
-}
-
-var removeNoise = async function (imagePath, secondImagePath) {
-    const image1 = await (await (await Jimp.read(imagePath)).color([{ apply: 'desaturate', params: [90] }])).contrast(1);
-    const image2 = await (await (await Jimp.read(secondImagePath)).color([{ apply: 'desaturate', params: [90] }])).contrast(1);
-
-    console.log(`[ Remove Noise ]`);
-    console.log(oneSquare(image1, image2));
-    console.log(fiveSquare(image1, image2));
-    console.log(bigSquare(image1, image2));
-    console.log(random(image1, image2));
-}
-
-var binary = async function (imagePath, secondImagePath) {
-    const image1 = await (await Jimp.read(imagePath)).rgba(false).greyscale().contrast(1).posterize(2);
-    const image2 = await (await Jimp.read(secondImagePath)).rgba(false).greyscale().contrast(1).posterize(2);
-
-    console.log(`[ Binary ]`);
-    console.log(oneSquare(image1, image2));
-    console.log(fiveSquare(image1, image2));
-    console.log(bigSquare(image1, image2));
-    console.log(random(image1, image2));
-}
-
-var sharpen = async function (imagePath, secondImagePath) {
-    const testPath1 = "testsharpen1.jpeg";
-    const testPath2 = "testsharpen2.jpeg";
-
-
-    await sharp(imagePath).sharpen(1, 1, 1).jpeg({ quality: 100 }).toFile(testPath1);
-    await sharp(secondImagePath).sharpen(1, 1, 1).jpeg({ quality: 100 }).toFile(testPath2);
-    const image1 = await Jimp.read(testPath1);
-    const image2 = await Jimp.read(testPath2);
-
-
-    console.log(`[ Sharpen ]`);
-    console.log(oneSquare(image1, image2));
-    console.log(fiveSquare(image1, image2));
-    console.log(bigSquare(image1, image2));
-    console.log(random(image1, image2));
-
-    await fs.unlinkSync(testPath1);
-    await fs.unlinkSync(testPath2);
-}
-
 var histogram = async function (imagePath, secondImagePath) {
     const image1 = await Image.load(imagePath);
     const image2 = await Image.load(secondImagePath);
@@ -298,12 +200,82 @@ var histogram = async function (imagePath, secondImagePath) {
 
 }
 
+var compareAll = async function(name, image1, image2){
+    console.log(`[ ${name} ]`);
+    console.log(oneSquare(image1, image2));
+    console.log(fiveSquare(image1, image2));
+    console.log(bigSquare(image1, image2));
+    console.log(random(image1, image2));
+    console.log(await histogram(image1, image2));
+}
+
+var greyScale = async function (imagePath, secondImagePath) {
+    const image1 = await (await Jimp.read(imagePath)).grayscale();
+    const image2 = await (await Jimp.read(secondImagePath)).grayscale();;
+
+    await compareAll("Grey Scale", image1, image2);
+}
+
+var normalize = async function (imagePath, secondImagePath) {
+    const image1 = await (await Jimp.read(imagePath)).normalize();
+    const image2 = await (await Jimp.read(secondImagePath)).normalize();;
+
+    await compareAll("Normalize", image1, image2);
+}
+
+var blur = async function (imagePath, secondImagePath, r = 10) {
+    const image1 = await (await Jimp.read(imagePath)).blur(r);
+    const image2 = await (await Jimp.read(secondImagePath)).blur(r);
+
+    await compareAll(`Blur ratio ${r}`, image1, image2);
+}
+
+var gaussianBlur = async function (imagePath, secondImagePath, r = 10) {
+    const image1 = await (await Jimp.read(imagePath)).gaussian(r);
+    const image2 = await (await Jimp.read(secondImagePath)).gaussian(r);
+
+    await compareAll(`Gaussian Blur ratio ${r}`, image1, image2);
+}
+
+var dither = async function (imagePath, secondImagePath) {
+    const image1 = await (await Jimp.read(imagePath)).dither565();
+    const image2 = await (await Jimp.read(secondImagePath)).dither565();
+
+   await compareAll(`Dither`, image1, image2);
+}
+
+var removeNoise = async function (imagePath, secondImagePath) {
+    const image1 = await (await (await Jimp.read(imagePath)).color([{ apply: 'desaturate', params: [90] }])).contrast(1);
+    const image2 = await (await (await Jimp.read(secondImagePath)).color([{ apply: 'desaturate', params: [90] }])).contrast(1);
+
+  
+    await compareAll(`Remove noise`, image1, image2);
+}
+
+var binary = async function (imagePath, secondImagePath) {
+    const image1 = await (await Jimp.read(imagePath)).rgba(false).greyscale().contrast(1).posterize(2);
+    const image2 = await (await Jimp.read(secondImagePath)).rgba(false).greyscale().contrast(1).posterize(2);
+
+    await compareAll(`Binary`, image1, image2);
+}
+
+var sharpen = async function (imagePath, secondImagePath) {
+    const testPath1 = "testsharpen1.jpeg";
+    const testPath2 = "testsharpen2.jpeg";
+
+
+    await sharp(imagePath).sharpen(1, 1, 1).jpeg({ quality: 100 }).toFile(testPath1);
+    await sharp(secondImagePath).sharpen(1, 1, 1).jpeg({ quality: 100 }).toFile(testPath2);
+    const image1 = await Jimp.read(testPath1);
+    const image2 = await Jimp.read(testPath2);
+
+    await compareAll(`Sharpen`, image1, image2);
+
+    await fs.unlinkSync(testPath1);
+    await fs.unlinkSync(testPath2);
+}
+
 var main = async function () {
-
-    const image1 = `images/img2.jpeg`;
-    const image2 = `images/img1.jpeg`;
-
-    await histogram(image1, image2);
 
 }
 
