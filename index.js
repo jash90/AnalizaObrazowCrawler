@@ -5,7 +5,9 @@ var url = require('url');
 
 var Jimp = require('jimp');
 
-const { Image } = require('image-js');
+const {
+    Image
+} = require('image-js');
 
 var flatMap = require('array.prototype.flatmap');
 
@@ -16,6 +18,9 @@ const downloadUrl = "http://192.168.64.2/gallery1.html";
 const baseUrl = url.parse(downloadUrl).hostname;
 
 const defaultFolderImage = "images";
+
+const testPath1 = "test1.jpeg";
+const testPath2 = "test2.jpeg";
 
 const downloadSingleFile = function (uri, filename, callback) {
     request.head(uri, function () {
@@ -41,15 +46,24 @@ const downloadAllFile = function () {
 }
 
 const calculateSize = function (bitmap) {
-    return { width: bitmap.width, height: bitmap.height };
+    return {
+        width: bitmap.width,
+        height: bitmap.height
+    };
 }
 
 const calculateSquare = function (size) {
-    return { width: Math.floor(size.width / 3), height: Math.floor(size.height / 3) };
+    return {
+        width: Math.floor(size.width / 3),
+        height: Math.floor(size.height / 3)
+    };
 }
 
 const calculateBigSquare = function (size) {
-    return { width: Math.floor(size.width / 2), height: Math.floor(size.height / 2) };
+    return {
+        width: Math.floor(size.width / 2),
+        height: Math.floor(size.height / 2)
+    };
 }
 
 const compareSquare = function (square1, square2) {
@@ -162,7 +176,10 @@ var random = function (image1, image2) {
         const x = Number((Math.random() * defaultSquare.width).toFixed(0));
         const y = Number((Math.random() * defaultSquare.height).toFixed(0));
         if (pixelsToCompare.filter(f => f.x == x && f.y == y).length < 1) {
-            pixelsToCompare.push({ x, y });
+            pixelsToCompare.push({
+                x,
+                y
+            });
         }
 
         process.stdout.write(`\rLoading ${h[i++]} ${(pixelsToCompare.length / countPixels * 100).toFixed(2)}%    `);
@@ -197,16 +214,18 @@ var histogram = async function (imagePath, secondImagePath) {
         }
 
     console.log(`Histogram Compare : Similarity ${(sumCompare / flatMap(image1Histogram, (x) => x).length * 100).toFixed(2)} %`);
-
 }
 
-var compareAll = async function(name, image1, image2){
+var compareAll = async function (name, imagePath, secondImagePath) {
+    const image1 = await Jimp.read(imagePath);
+    const image2 = await Jimp.read(secondImagePath);
+
     console.log(`[ ${name} ]`);
     console.log(oneSquare(image1, image2));
     console.log(fiveSquare(image1, image2));
     console.log(bigSquare(image1, image2));
     console.log(random(image1, image2));
-    console.log(await histogram(image1, image2));
+    console.log(await histogram(imagePath, secondImagePath));
 }
 
 var greyScale = async function (imagePath, secondImagePath) {
@@ -238,45 +257,63 @@ var gaussianBlur = async function (imagePath, secondImagePath, r = 10) {
 }
 
 var dither = async function (imagePath, secondImagePath) {
-    const image1 = await (await Jimp.read(imagePath)).dither565();
-    const image2 = await (await Jimp.read(secondImagePath)).dither565();
+    const image1 = await (await (await Jimp.read(imagePath)).dither565()).writeAsync(testPath1);
+    const image2 = await (await (await Jimp.read(secondImagePath)).dither565()).writeAsync(testPath2);
 
-   await compareAll(`Dither`, image1, image2);
-}
-
-var removeNoise = async function (imagePath, secondImagePath) {
-    const image1 = await (await (await Jimp.read(imagePath)).color([{ apply: 'desaturate', params: [90] }])).contrast(1);
-    const image2 = await (await (await Jimp.read(secondImagePath)).color([{ apply: 'desaturate', params: [90] }])).contrast(1);
-
-  
-    await compareAll(`Remove noise`, image1, image2);
-}
-
-var binary = async function (imagePath, secondImagePath) {
-    const image1 = await (await Jimp.read(imagePath)).rgba(false).greyscale().contrast(1).posterize(2);
-    const image2 = await (await Jimp.read(secondImagePath)).rgba(false).greyscale().contrast(1).posterize(2);
-
-    await compareAll(`Binary`, image1, image2);
-}
-
-var sharpen = async function (imagePath, secondImagePath) {
-    const testPath1 = "testsharpen1.jpeg";
-    const testPath2 = "testsharpen2.jpeg";
-
-
-    await sharp(imagePath).sharpen(1, 1, 1).jpeg({ quality: 100 }).toFile(testPath1);
-    await sharp(secondImagePath).sharpen(1, 1, 1).jpeg({ quality: 100 }).toFile(testPath2);
-    const image1 = await Jimp.read(testPath1);
-    const image2 = await Jimp.read(testPath2);
-
-    await compareAll(`Sharpen`, image1, image2);
+    await compareAll(`Dither`, testPath1,testPath2);
 
     await fs.unlinkSync(testPath1);
     await fs.unlinkSync(testPath2);
 }
 
-var main = async function () {
+var removeNoise = async function (imagePath, secondImagePath) {
+    const image1 = await (await (await Jimp.read(imagePath)).color([{
+        apply: 'desaturate',
+        params: [90]
+    }])).contrast(1);
+    const image2 = await (await (await Jimp.read(secondImagePath)).color([{
+        apply: 'desaturate',
+        params: [90]
+    }])).contrast(1);
 
+
+    await compareAll(`Remove noise`, image1, image2);
+}
+
+var binary = async function (imagePath, secondImagePath) {
+    const image1 = await(await (await Jimp.read(imagePath)).rgba(false).greyscale().contrast(1).posterize(2)).writeAsync(testPath1);
+    const image2 = await(await (await Jimp.read(secondImagePath)).rgba(false).greyscale().contrast(1).posterize(2)).writeAsync(testPath2);
+
+    await compareAll(`Binary`, testPath1, testPath2);
+   
+    await fs.unlinkSync(testPath1);
+    await fs.unlinkSync(testPath2);
+}
+
+var sharpen = async function (imagePath, secondImagePath) {
+    await sharp(imagePath).sharpen(1, 1, 1).jpeg({
+        quality: 100
+    }).toFile(testPath1);
+    await sharp(secondImagePath).sharpen(1, 1, 1).jpeg({
+        quality: 100
+    }).toFile(testPath2);
+
+    await compareAll(`Sharpen`, testPath1, testPath2);
+
+    await fs.unlinkSync(testPath1);
+    await fs.unlinkSync(testPath2);
+}
+
+var normal = async function (imagePath, secondImagePath) {
+    await compareAll(`Normal`, imagePath, secondImagePath);
+}
+
+
+
+var main = async function () {
+    const image1 = "images/img1.jpeg";
+    const image2 = "images/img2.jpeg";
+    await binary(image1, image2)
 }
 
 main()
