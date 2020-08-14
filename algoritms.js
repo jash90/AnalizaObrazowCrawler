@@ -13,14 +13,14 @@ var oneSquare = function (name, image1, image2) {
 
     const defaultSquare = MathAlgoritm.getDefaultSquare(image1, image2);
 
-    var sumCompare = 0;
+    var sumSimilarity = 0;
 
     for (var i = 0; i < defaultSquare.width; i++)
         for (var j = 0; j < defaultSquare.height; j++) {
-            sumCompare = sumCompare + MathAlgoritm.compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j);
+            sumSimilarity = sumSimilarity + MathAlgoritm.comparePixelInImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j);
         }
 
-    const similarity = (sumCompare / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2);
+    const similarity = (sumSimilarity / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2);
 
     console.log(`One Square Compare : Similarity ${similarity} %`);
 
@@ -31,19 +31,19 @@ var fiveSquare = function (name, image1, image2) {
 
     const defaultSquare = MathAlgoritm.getDefaultSquare(image1, image2);
 
-    var sumCompare = 0;
+    var sumSimilarity = 0;
 
     for (var i = 0; i < defaultSquare.width; i++)
         for (var j = 0; j < defaultSquare.height; j++) {
-            sumCompare = sumCompare + MathAlgoritm.compareImages(image1, image2, i, j) +
-                MathAlgoritm.compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j) +
-                MathAlgoritm.compareImages(image1, image2, defaultSquare.width * 2 + i, j) +
-                MathAlgoritm.compareImages(image1, image2, i, defaultSquare.height * 2 + j) +
-                MathAlgoritm.compareImages(image1, image2, defaultSquare.width * 2 + i, defaultSquare.height * 2 + j);
+            sumSimilarity = sumSimilarity + MathAlgoritm.comparePixelInImages(image1, image2, i, j) +
+                MathAlgoritm.comparePixelInImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j) +
+                MathAlgoritm.comparePixelInImages(image1, image2, defaultSquare.width * 2 + i, j) +
+                MathAlgoritm.comparePixelInImages(image1, image2, i, defaultSquare.height * 2 + j) +
+                MathAlgoritm.comparePixelInImages(image1, image2, defaultSquare.width * 2 + i, defaultSquare.height * 2 + j);
 
         }
 
-    const similarity = (sumCompare / (defaultSquare.width * defaultSquare.height * 5) * 100).toFixed(2);
+    const similarity = (sumSimilarity / (defaultSquare.width * defaultSquare.height * 5) * 100).toFixed(2);
 
     console.log(`Five Square Compare : Similarity ${similarity} %`);
 
@@ -54,14 +54,14 @@ var bigSquare = function (name, image1, image2) {
 
     const defaultSquare = MathAlgoritm.getBigDefaultSquare(image1, image2);
 
-    var sumCompare = 0;
+    var sumSimilarity = 0;
 
     for (var i = 0; i < defaultSquare.width; i++)
         for (var j = 0; j < defaultSquare.height; j++) {
-            sumCompare = sumCompare + MathAlgoritm.compareImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j);
+            sumSimilarity = sumSimilarity + MathAlgoritm.comparePixelInImages(image1, image2, defaultSquare.width + i, defaultSquare.height + j);
         }
 
-    const similarity = (sumCompare / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2);
+    const similarity = (sumSimilarity / (defaultSquare.width * defaultSquare.height) * 100).toFixed(2);
 
     console.log(`Big Square Compare : Similarity ${similarity} %`);
 
@@ -73,7 +73,7 @@ var random = function (name, image1, image2) {
 
     const countPixels = square.width * square.height;
 
-    const defaultSquare = MathAlgoritm.compareSquare(MathAlgoritm.calculateSize(image1.bitmap), MathAlgoritm.calculateSize(image2.bitmap));
+    const defaultSquare = MathAlgoritm.compareSquare(MathAlgoritm.getSize(image1.bitmap), MathAlgoritm.getSize(image2.bitmap));
 
     let pixelsToCompare = [];
     var h = ['|', '/', '-', '\\'];
@@ -95,13 +95,13 @@ var random = function (name, image1, image2) {
 
     process.stdout.write("\r");
 
-    var sumCompare = 0;
+    var sumSimilarity = 0;
 
     for (var i = 0; i < pixelsToCompare.length; i++) {
-        sumCompare = sumCompare + MathAlgoritm.compareImages(image1, image2, pixelsToCompare[i].x, pixelsToCompare[i].y);
+        sumSimilarity = sumSimilarity + MathAlgoritm.comparePixelInImages(image1, image2, pixelsToCompare[i].x, pixelsToCompare[i].y);
     }
 
-    const similarity = (sumCompare / pixelsToCompare.length * 100).toFixed(2);
+    const similarity = (sumSimilarity / pixelsToCompare.length * 100).toFixed(2);
 
     console.log(`Random Compare : Similarity ${similarity} %`);
 
@@ -115,32 +115,20 @@ var histogram = async function (name, imagePath, secondImagePath) {
     const image2Histogram = image2.getHistograms();
     const countHistogram = flatMap(image1Histogram, (x) => x).length;
 
-    var sumCompare = 0;
+    var sumSimilarity = 0;
 
     for (var i = 0; i < image1Histogram.length; i++)
         for (var j = 0; j < image1Histogram[i].length; j++) {
             if (Math.abs(image1Histogram[i][j] - image2Histogram[i][j]) <= countHistogram * 0.1) {
-                sumCompare = sumCompare + 1;
+                sumSimilarity = sumSimilarity + 1;
             }
         }
 
-    const similarity = (sumCompare / countHistogram * 100).toFixed(2);
+    const similarity = (sumSimilarity / countHistogram * 100).toFixed(2);
 
     console.log(`Histogram Compare : Similarity ${similarity} %`);
 
     return { name: `${name} histogram`, similarity };
-}
-
-var compareAll = async function (name, imagePath, secondImagePath) {
-    const image1 = await Jimp.read(imagePath);
-    const image2 = await Jimp.read(secondImagePath);
-
-    console.log(`[ ${name} ]`);
-    console.log(oneSquare(name, image1, image2));
-    console.log(fiveSquare(name, image1, image2));
-    console.log(bigSquare(name, image1, image2));
-    console.log(random(name, image1, image2));
-    console.log(await histogram(name, imagePath, secondImagePath));
 }
 
 var greyScale = async function (imagePath, secondImagePath) {
@@ -237,6 +225,18 @@ var sharpen = async function (imagePath, secondImagePath) {
 
 var normal = async function (imagePath, secondImagePath) {
     await compareAll(`Normal`, imagePath, secondImagePath);
+}
+
+var compareAll = async function (name, imagePath, secondImagePath) {
+    const image1 = await Jimp.read(imagePath);
+    const image2 = await Jimp.read(secondImagePath);
+
+    console.log(`[ ${name} ]`);
+    console.log(oneSquare(name, image1, image2));
+    console.log(fiveSquare(name, image1, image2));
+    console.log(bigSquare(name, image1, image2));
+    console.log(random(name, image1, image2));
+    console.log(await histogram(name, imagePath, secondImagePath));
 }
 
 

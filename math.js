@@ -1,6 +1,6 @@
 const Jimp = require('jimp');
 
-const calculateSize = function (bitmap) {
+const getSize = function (bitmap) {
     return {
         width: bitmap.width,
         height: bitmap.height
@@ -31,33 +31,22 @@ const compareSquare = function (square1, square2) {
     return square1;
 }
 
-const getColorPixelFromImage = function (image, width, height) {
-    return Jimp.intToRGBA(image.getPixelColor(width, height));
+const getColorPixelFromImage = function (image, x, y) {
+    return Jimp.intToRGBA(image.getPixelColor(x, y));
 }
 
 const getDefaultSquare = function (image1, image2) {
-    return compareSquare(calculateSquare(calculateSize(image1.bitmap)), calculateSquare(calculateSize(image2.bitmap)));
+    return compareSquare(calculateSquare(getSize(image1.bitmap)), calculateSquare(getSize(image2.bitmap)));
 }
 
 const getBigDefaultSquare = function (image1, image2) {
-    return compareSquare(calculateBigSquare(calculateSize(image1.bitmap)), calculateBigSquare(calculateSize(image2.bitmap)));
+    return compareSquare(calculateBigSquare(getSize(image1.bitmap)), calculateBigSquare(getSize(image2.bitmap)));
 }
-
-const compareImages = function (image1, image2, x, y) {
-    const color1 = getColorPixelFromImage(image1, x, y);
-    const color2 = getColorPixelFromImage(image2, x, y);
-
-    if (compareRGBA(color1, color2)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
 
 const compareRGBA = function (color1, color2) {
     if (Math.abs(color1.r - color2.r) > 30)
         return false
+        
     if (Math.abs(color1.g - color2.g) > 30)
         return false
 
@@ -70,6 +59,17 @@ const compareRGBA = function (color1, color2) {
     return true;
 }
 
+const comparePixelInImages = function (image1, image2, x, y) {
+    const color1 = getColorPixelFromImage(image1, x, y);
+    const color2 = getColorPixelFromImage(image2, x, y);
+
+    if (compareRGBA(color1, color2)) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 module.exports = {
-    getDefaultSquare, compareImages, calculateSize, calculateBigSquare, getBigDefaultSquare, compareSquare
+    getDefaultSquare, comparePixelInImages, getSize, calculateBigSquare, getBigDefaultSquare, compareSquare
 }

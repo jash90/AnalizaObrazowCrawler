@@ -7,11 +7,11 @@ const downloadUrl = "http://192.168.64.2/gallery1.html";
 const baseUrl = Url.parse(downloadUrl).hostname;
 const defaultFolderImage = "images";
 
-const downloadSingleFile = async function (uri, filename, callback) {
+const downloadSingleFile = async function (uri, filename) {
     try {
         const response = await axios.default({ url: uri, responseType: "stream" });
         response.data.pipe(Fs.createWriteStream(filename));
-        console.log(`done ${filename}`);
+        console.log(`download done ${filename}`);
     } catch (error) {
         console.log(error);
     }
