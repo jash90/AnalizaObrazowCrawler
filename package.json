@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "repository": "https://github.com/jash90/AnalizaObrazowCrawler.git",
-  "author": "Bartlomiej Zimny <b.zimny@getprintbox.com>",
+  "author": "Sławomir Frydrych <frydrychslawomir@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "array.prototype.flatmap": "^1.2.3",
