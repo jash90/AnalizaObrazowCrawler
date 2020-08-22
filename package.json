@@ -8,6 +8,7 @@
   "dependencies": {
     "array.prototype.flatmap": "^1.2.3",
     "axios": "^0.19.2",
+    "exif": "^0.6.0",
     "fs": "0.0.1-security",
     "image-js": "^0.21.9",
     "jimp": "^0.14.0",

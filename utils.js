@@ -7,6 +7,9 @@ const downloadUrl = "http://192.168.64.2";
 const baseUrl = Url.parse(downloadUrl).hostname;
 const defaultFolderImage = "images";
 
+const { ExifImage } = require('exif');
+const Jimp = require('jimp');
+
 const downloadSingleFile = async function (uri, filename) {
     try {
         const response = await axios.default({ url: uri, responseType: "stream" });
@@ -70,4 +73,72 @@ function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
 }
 
-module.exports = { downloadAllFile };
+const sendFilesToDatabase = async function () {
+    const files = Fs.readdirSync(defaultFolderImage);
+
+    let images = [];
+
+    for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        images.push(await createImage(file));
+    }
+
+    console.log(images);
+
+}
+
+const createImage = async function (file) {
+
+    const path = defaultFolderImage + "/" + file;
+
+    let image = {
+        filename: file,
+        path
+    }
+
+    const exifImage = new ExifImage({ image: path }, (error, exifData) => { });
+
+    if (exifImage.exif && exifImage.gps) {
+        const { CreateDate,
+            ExifImageWidth,
+            ExifImageHeight } = exifImage.exif;
+
+        image.width = ExifImageWidth;
+        image.height = ExifImageHeight;
+        image.creation_date = CreateDate;
+        image.location = parseCoordinates(exifImage.gps);
+
+        console.log(image);
+
+        return image;
+    } else {
+        const imageJimp = await Jimp.read(path);
+
+        const { width, height } = imageJimp.bitmap;
+
+        image.width = width;
+        image.height = height;
+        image.creation_date = createdDate(path);
+
+        return image;
+    }
+
+
+}
+
+const parseCoordinates = function (gps) {
+    if (Object.keys(gps).length < 3)
+        return;
+
+    const { GPSLatitude, GPSLongitude, GPSLatitudeRef, GPSLongitudeRef } = gps;
+
+    return `${GPSLatitude[0]}°${GPSLatitude[1]}’${GPSLatitude[2]}"${GPSLatitudeRef},`
+        + `${GPSLongitude[0]}°${GPSLongitude[1]}’${GPSLongitude[2]}"${GPSLongitudeRef}`;
+}
+
+function createdDate(file) {
+    const { birthtime } = Fs.statSync(file)
+    return birthtime
+}
+
+module.exports = { downloadAllFile, sendFilesToDatabase };
