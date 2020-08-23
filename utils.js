@@ -6,6 +6,7 @@ const Url = require('url');
 const downloadUrl = "http://192.168.64.2";
 const baseUrl = Url.parse(downloadUrl).hostname;
 const defaultFolderImage = "images";
+const defaultFolderSimilarity = "similarity";
 
 const { ExifImage } = require('exif');
 const Jimp = require('jimp');
@@ -69,7 +70,7 @@ const linksFromSite = async function (downloadUrl) {
     return links.map(link => "http://" + baseUrl + "/" + link.rawAttributes.href);
 }
 
-function onlyUnique(value, index, self) {
+const onlyUnique = function (value, index, self) {
     return self.indexOf(value) === index;
 }
 
@@ -115,7 +116,7 @@ const createImage = async function (file) {
         image.height = ExifImageHeight;
         image.creation_date = CreateDate;
     }
-    
+
     if (exifImage.gps)
         image.location = parseCoordinates(exifImage.gps);
 
@@ -132,9 +133,52 @@ const parseCoordinates = function (gps) {
         + `${GPSLongitude[0]}°${GPSLongitude[1]}’${GPSLongitude[2]}"${GPSLongitudeRef}`;
 }
 
-function createdDate(file) {
+const createdDate = function (file) {
     const { birthtime } = Fs.statSync(file)
     return birthtime
 }
 
-module.exports = { downloadAllFile, sendFilesToDatabase };
+const sendPatternSimilarity = function () {
+    const directories = Fs.readdirSync(defaultFolderSimilarity, { withFileTypes: true })
+        .filter(directory => directory.isDirectory())
+        .map(directory => defaultFolderSimilarity + "/" + directory.name);
+
+    let similarity = [];
+
+    for (let index = 0; index < directories.length; index++) {
+
+        const directory = directories[index];
+        const files = Fs.readdirSync(directory);
+
+        for (let x = 0; x < files.length; x++) {
+
+            const file1 = files[x];
+
+            for (let y = 0; y < files.length; y++) {
+
+                const file2 = files[y];
+
+                if (x != y) {
+                    const array = JSON.stringify([file1, file2].sort());
+                    if (!similarity.some(function (value) {
+                        return JSON.stringify(value) === array;
+                    })) {
+                        similarity.push([file1, file2].sort());
+                    }
+                }
+            }
+        }
+    }
+    similarity = similarity.map(array => {
+        return {
+            image_id: array[0],
+            second_image_id: array[1]
+        }
+    })
+
+    console.log(similarity);
+
+    return similarity;
+}
+
+module.exports = { downloadAllFile, sendFilesToDatabase, sendPatternSimilarity };
