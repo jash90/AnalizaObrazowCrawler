@@ -96,9 +96,17 @@ const createImage = async function (file) {
         path
     }
 
+    const imageJimp = await Jimp.read(path);
+
+    const { width, height } = imageJimp.bitmap;
+
+    image.width = width;
+    image.height = height;
+    image.creation_date = createdDate(path);
+
     const exifImage = new ExifImage({ image: path }, (error, exifData) => { });
 
-    if (exifImage.exif && exifImage.gps) {
+    if (exifImage.exif) {
         const { CreateDate,
             ExifImageWidth,
             ExifImageHeight } = exifImage.exif;
@@ -106,24 +114,12 @@ const createImage = async function (file) {
         image.width = ExifImageWidth;
         image.height = ExifImageHeight;
         image.creation_date = CreateDate;
+    }
+    
+    if (exifImage.gps)
         image.location = parseCoordinates(exifImage.gps);
 
-        console.log(image);
-
-        return image;
-    } else {
-        const imageJimp = await Jimp.read(path);
-
-        const { width, height } = imageJimp.bitmap;
-
-        image.width = width;
-        image.height = height;
-        image.creation_date = createdDate(path);
-
-        return image;
-    }
-
-
+    return image;
 }
 
 const parseCoordinates = function (gps) {
