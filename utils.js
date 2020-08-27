@@ -1,4 +1,3 @@
-const axios = require("axios");
 const NodeParse = require("node-html-parser");
 const Fs = require('fs');
 const Url = require('url');
@@ -8,12 +7,14 @@ const baseUrl = Url.parse(downloadUrl).hostname;
 const defaultFolderImage = "images";
 const defaultFolderSimilarity = "similarity";
 
+const axios = require('axios').default;
+
 const { ExifImage } = require('exif');
 const Jimp = require('jimp');
 
 const downloadSingleFile = async function (uri, filename) {
     try {
-        const response = await axios.default({ url: uri, responseType: "stream" });
+        const response = await axios({ url: uri, responseType: "stream" });
         response.data.pipe(Fs.createWriteStream(filename));
         console.log(`download done ${filename}`);
     } catch (error) {
@@ -75,16 +76,35 @@ const onlyUnique = function (value, index, self) {
 }
 
 const sendFilesToDatabase = async function () {
-    const files = Fs.readdirSync(defaultFolderImage);
+    try {
+        const files = Fs.readdirSync(defaultFolderImage);
 
-    let images = [];
+        let images = [];
+        var h = ['|', '/', '-', '\\'];
+        var i = 0;
+        for (let index = 0; index < files.length; index++) {
+            const file = files[index];
+            const image = await createImage(file);
+            const response = await axios.post("http://localhost:3091/images",
+                {...image}
+            );
 
-    for (let index = 0; index < files.length; index++) {
-        const file = files[index];
-        images.push(await createImage(file));
+            images.push(response.data);
+            process.stdout.write(`\rLoading ${h[i++]} sending images ${(index / files.length * 100).toFixed(2)}%    `);
+            i &= h.length - 1;
+    
+        }
+    
+        process.stdout.write("\r");
+
+        console.log(images);
+
+        console.log(`Sending completed: sended ${files.length} photos.`)
+
+
+    } catch (error) {
+        console.log(error);
     }
-
-    console.log(images);
 
 }
 
@@ -94,7 +114,11 @@ const createImage = async function (file) {
 
     let image = {
         filename: file,
-        path
+        path,
+        width: 0,
+        height: 0,
+        date_created: Date.now().toString(),
+        location: ""
     }
 
     const imageJimp = await Jimp.read(path);
@@ -103,7 +127,7 @@ const createImage = async function (file) {
 
     image.width = width;
     image.height = height;
-    image.creation_date = createdDate(path);
+    image.date_created = createdDate(path);
 
     const exifImage = new ExifImage({ image: path }, (error, exifData) => { });
 
@@ -114,7 +138,7 @@ const createImage = async function (file) {
 
         image.width = ExifImageWidth;
         image.height = ExifImageHeight;
-        image.creation_date = CreateDate;
+        image.date_created = CreateDate;
     }
 
     if (exifImage.gps)
@@ -181,4 +205,25 @@ const sendPatternSimilarity = function () {
     return similarity;
 }
 
-module.exports = { downloadAllFile, sendFilesToDatabase, sendPatternSimilarity };
+const sendAlgorithms = function () {
+
+    const algorithmsEdit = ["grey scale", "normalize", "blur", "gaussian blur", "dither", "remove noise", "binary", "sharpen", "normal"];
+    const algorithmsParameters = [{}, {}, { r: 10 }, { r: 10 }, {}, {}, {}, {}, {}];
+    const algorithmsCompare = ["one square", "five square", "big square", "random", "histogram"];
+
+    let algorithms = [];
+
+    for (let i = 0; i < algorithmsEdit.length; i++)
+        for (let j = 0; j < algorithmsCompare.length; j++) {
+            algorithms.push({ name: `${algorithmsEdit[i]} ${algorithmsCompare[j]}`, parameters: JSON.stringify(algorithmsParameters[i]) });
+        }
+
+    console.log(algorithms);
+
+    return algorithms;
+
+}
+
+
+
+module.exports = { downloadAllFile, sendFilesToDatabase, sendPatternSimilarity, sendAlgorithms };
