@@ -93,7 +93,7 @@ const sendFilesToDatabase = async function () {
             );
 
             images.push(response.data);
-            process.stdout.write(`\rLoading ${h[i++]} sending images ${(index / files.length * 100).toFixed(2)}%    `);
+            process.stdout.write(`\rLoading ${h[i++]} sending images ${(index / files.length * 100).toFixed(2)}%`);
             i &= h.length - 1;
 
         }
@@ -113,12 +113,12 @@ const sendFilesToDatabase = async function () {
 
 }
 
-const createImage = async function (file) {
+const createImage = async function (filename) {
 
-    const path = defaultFolderImage + "/" + file;
+    const path = defaultFolderImage + "/" + filename;
 
     let image = {
-        filename: file,
+        filename,
         path,
         width: 0,
         height: 0,
@@ -137,12 +137,7 @@ const createImage = async function (file) {
     const exifImage = new ExifImage({ image: path }, (error, exifData) => { });
 
     if (exifImage.exif) {
-        const { CreateDate,
-            ExifImageWidth,
-            ExifImageHeight } = exifImage.exif;
-
-        image.width = ExifImageWidth;
-        image.height = ExifImageHeight;
+        const { CreateDate } = exifImage.exif;
         image.date_created = CreateDate;
     }
 
@@ -262,26 +257,23 @@ const generatedResultsAndSendResult = async function (images, similarities, algo
             if (image1.id !== image2.id)
                 for (let k = 0; k < algorithms.length; k++) {
                     const algorithm = algorithms[k];
-                    if (!algorithm.name.includes("random")) {
-                        let compare = { imageId: Number(image1.id), secondImageId: Number(image2.id), versionAlgorithmId: Number(algorithm.id) };
+                    let compare = { imageId: Number(image1.id), secondImageId: Number(image2.id), versionAlgorithmId: Number(algorithm.id) };
 
-                        const similarityEntity = similarities.find(value => (value.imageId === image1.id && value.secondImageId === image2.id) || (value.imageId === image2.id && value.secondImageId === image1.id));
-                        const result = await compareWithAlgorithm(algorithm.name, algorithm.parameters, image1.path, image2.path);
-                        compare.similarity = Number(result.similarity);
-                        compare.correct = result.similarity >= 50 && !!similarityEntity || result.similarity < 50 && !similarityEntity;
+                    const similarityEntity = similarities.find(value => (value.imageId === image1.id && value.secondImageId === image2.id) || (value.imageId === image2.id && value.secondImageId === image1.id));
+                    const result = await compareWithAlgorithm(algorithm.name, algorithm.parameters, image1.path, image2.path);
+                    compare.similarity = Number(result.similarity);
+                    compare.correct = result.similarity >= 50 && !!similarityEntity || result.similarity < 50 && !similarityEntity;
 
 
-                        const response = await axios.post("http://localhost:3091/compares", {
-                            ...compare
-                        });
+                    const response = await axios.post("http://localhost:3091/compares", {
+                        ...compare
+                    });
 
-                        compares.push(response.data);
+                    compares.push(response.data);
 
-                        process.stdout.write(`\rLoading generate result ${h[x++]} ${(compares.length / (combinations(images.length, 2) * algorithms.length) * 100).toFixed(5)}%\n`);
-                        x &= h.length - 1;
-                    }
+                    process.stdout.write(`\rLoading generate result ${h[x++]} ${(compares.length / (combinations(images.length, 2) * algorithms.length) * 100).toFixed(5)}%\n`);
+                    x &= h.length - 1;
                 }
-
         }
     }
     process.stdout.write("\r");
