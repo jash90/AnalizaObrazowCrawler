@@ -3,9 +3,9 @@ const Utils = require("./utils");
 
 var main = async function () {
     try {
-         await Utils.downloadAllFile();
+        // await Utils.downloadAllFile();
         // await Utils.sendFilesToDatabase();
-        // await Utils.sendPatternSimilarity();
+         await Utils.sendPatternSimilarity();
         // await Utils.sendAlgorithms();
         // const image1 = "images/img1.jpeg";
         // const image2 = "images/img122.jpeg";

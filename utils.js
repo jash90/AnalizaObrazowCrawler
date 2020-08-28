@@ -86,20 +86,22 @@ const sendFilesToDatabase = async function () {
             const file = files[index];
             const image = await createImage(file);
             const response = await axios.post("http://localhost:3091/images",
-                {...image}
+                { ...image }
             );
 
             images.push(response.data);
             process.stdout.write(`\rLoading ${h[i++]} sending images ${(index / files.length * 100).toFixed(2)}%    `);
             i &= h.length - 1;
-    
+
         }
-    
+
         process.stdout.write("\r");
 
         console.log(images);
 
-        console.log(`Sending completed: sended ${files.length} photos.`)
+        console.log(`Sending completed: sended ${files.length} photos.`);
+
+        return images;
 
 
     } catch (error) {
@@ -162,47 +164,66 @@ const createdDate = function (file) {
     return birthtime
 }
 
-const sendPatternSimilarity = function () {
-    const directories = Fs.readdirSync(defaultFolderSimilarity, { withFileTypes: true })
-        .filter(directory => directory.isDirectory())
-        .map(directory => defaultFolderSimilarity + "/" + directory.name);
+const sendPatternSimilarity = async function () {
+    try {
 
-    let similarity = [];
+        const directories = Fs.readdirSync(defaultFolderSimilarity, { withFileTypes: true })
+            .filter(directory => directory.isDirectory())
+            .map(directory => defaultFolderSimilarity + "/" + directory.name);
 
-    for (let index = 0; index < directories.length; index++) {
+        let similarity = [];
 
-        const directory = directories[index];
-        const files = Fs.readdirSync(directory);
+        for (let index = 0; index < directories.length; index++) {
 
-        for (let x = 0; x < files.length; x++) {
+            const directory = directories[index];
+            const files = Fs.readdirSync(directory);
 
-            const file1 = files[x];
+            for (let x = 0; x < files.length; x++) {
 
-            for (let y = 0; y < files.length; y++) {
+                const file1 = files[x];
 
-                const file2 = files[y];
+                for (let y = 0; y < files.length; y++) {
 
-                if (x != y) {
-                    const array = JSON.stringify([file1, file2].sort());
-                    if (!similarity.some(function (value) {
-                        return JSON.stringify(value) === array;
-                    })) {
-                        similarity.push([file1, file2].sort());
+                    const file2 = files[y];
+
+                    if (x != y) {
+                        const array = JSON.stringify([file1, file2].sort());
+                        if (!similarity.some(function (value) {
+                            return JSON.stringify(value) === array;
+                        })) {
+                            similarity.push([file1, file2].sort());
+                        }
                     }
                 }
             }
         }
-    }
-    similarity = similarity.map(array => {
-        return {
-            image_id: array[0],
-            second_image_id: array[1]
+
+        const similarityDatabase = [];
+
+        for (let i = 0; i < similarity.length; i++) {
+            const element = similarity[i];
+            const response1 = await axios.get(`http://localhost:3091/images/filename/${element[0]}`);
+            const response2 = await axios.get(`http://localhost:3091/images/filename/${element[1]}`);
+            const imageId = Number(response1.data.id);
+            const secondImageId = Number(response2.data.id);
+            try {
+                const response = await axios.post(`http://localhost:3091/similaritys`, {imageId, secondImageId});
+                similarityDatabase.push(response.data);
+            } catch (error) {
+                console.log(error.response.data);
+            }
+            
         }
-    })
 
-    console.log(similarity);
+        console.log(similarityDatabase);
 
-    return similarity;
+        console.log(`Sending completed: sended ${similarityDatabase.length} similarities.`);
+
+        return similarityDatabase;
+
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const sendAlgorithms = function () {
