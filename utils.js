@@ -6,11 +6,14 @@ const downloadUrl = "http://192.168.64.2";
 const baseUrl = Url.parse(downloadUrl).hostname;
 const defaultFolderImage = "images";
 const defaultFolderSimilarity = "similarity";
+const { compareWithAlgorithm } = require("./algorithms.js");
 
 const axios = require('axios').default;
 
 const { ExifImage } = require('exif');
 const Jimp = require('jimp');
+
+const { combinations } = require('mathjs');
 
 const downloadSingleFile = async function (uri, filename) {
     try {
@@ -182,17 +185,12 @@ const sendPatternSimilarity = async function () {
 
                 const file1 = files[x];
 
-                for (let y = 0; y < files.length; y++) {
+                for (let y = x; y < files.length; y++) {
 
                     const file2 = files[y];
 
                     if (x != y) {
-                        const array = JSON.stringify([file1, file2].sort());
-                        if (!similarity.some(function (value) {
-                            return JSON.stringify(value) === array;
-                        })) {
-                            similarity.push([file1, file2].sort());
-                        }
+                        similarity.push([file1, file2].sort());
                     }
                 }
             }
@@ -253,6 +251,44 @@ const sendAlgorithms = async function () {
 
 }
 
+const generatedResultsAndSendResult = async function (images, similarities, algorithms) {
+    var h = ['|', '/', '-', '\\'];
+    var x = 0;
+    let compares = [];
+    for (let i = 0; i < images.length; i++) {
+        const image1 = images[i];
+        for (let j = i; j < images.length; j++) {
+            const image2 = images[j];
+            if (image1.id !== image2.id)
+                for (let k = 0; k < algorithms.length; k++) {
+                    const algorithm = algorithms[k];
+                    if (!algorithm.name.includes("random")) {
+                        let compare = { imageId: Number(image1.id), secondImageId: Number(image2.id), versionAlgorithmId: Number(algorithm.id) };
+
+                        const similarityEntity = similarities.find(value => (value.imageId === image1.id && value.secondImageId === image2.id) || (value.imageId === image2.id && value.secondImageId === image1.id));
+                        const result = await compareWithAlgorithm(algorithm.name, algorithm.parameters, image1.path, image2.path);
+                        compare.similarity = Number(result.similarity);
+                        compare.correct = result.similarity >= 50 && !!similarityEntity || result.similarity < 50 && !similarityEntity;
 
 
-module.exports = { downloadAllFile, sendFilesToDatabase, sendPatternSimilarity, sendAlgorithms };
+                        const response = await axios.post("http://localhost:3091/compares", {
+                            ...compare
+                        });
+
+                        compares.push(response.data);
+
+                        process.stdout.write(`\rLoading generate result ${h[x++]} ${(compares.length / (combinations(images.length, 2) * algorithms.length) * 100).toFixed(5)}%\n`);
+                        x &= h.length - 1;
+                    }
+                }
+
+        }
+    }
+    process.stdout.write("\r");
+
+    console.log(compares);
+
+    return compares;
+}
+
+module.exports = { downloadAllFile, sendFilesToDatabase, sendPatternSimilarity, sendAlgorithms, generatedResultsAndSendResult };
