@@ -207,12 +207,12 @@ const sendPatternSimilarity = async function () {
             const imageId = Number(response1.data.id);
             const secondImageId = Number(response2.data.id);
             try {
-                const response = await axios.post(`http://localhost:3091/similaritys`, {imageId, secondImageId});
+                const response = await axios.post(`http://localhost:3091/similaritys`, { imageId, secondImageId });
                 similarityDatabase.push(response.data);
             } catch (error) {
                 console.log(error.response.data);
             }
-            
+
         }
 
         console.log(similarityDatabase);
@@ -226,7 +226,7 @@ const sendPatternSimilarity = async function () {
     }
 }
 
-const sendAlgorithms = function () {
+const sendAlgorithms = async function () {
 
     const algorithmsEdit = ["grey scale", "normalize", "blur", "gaussian blur", "dither", "remove noise", "binary", "sharpen", "normal"];
     const algorithmsParameters = [{}, {}, { r: 10 }, { r: 10 }, {}, {}, {}, {}, {}];
@@ -236,10 +236,18 @@ const sendAlgorithms = function () {
 
     for (let i = 0; i < algorithmsEdit.length; i++)
         for (let j = 0; j < algorithmsCompare.length; j++) {
-            algorithms.push({ name: `${algorithmsEdit[i]} ${algorithmsCompare[j]}`, parameters: JSON.stringify(algorithmsParameters[i]) });
+            try {
+                const response = await axios.post(`http://localhost:3091/algorithms`, { name: `${algorithmsEdit[i]} ${algorithmsCompare[j]}`, parameters: JSON.stringify(algorithmsParameters[i]) });
+                algorithms.push(response.data);
+            } catch (error) {
+                console.log(error.response.data);
+            }
+
         }
 
     console.log(algorithms);
+
+    console.log(`Sending completed: sended ${algorithms.length} algorytm.`);
 
     return algorithms;
 
