@@ -8,7 +8,9 @@ const defaultFolderImage = "images";
 const defaultFolderSimilarity = "similarity";
 const { compareWithAlgorithm } = require("./algorithms.js");
 
-const axios = require('axios').default;
+const axiosDefault = require('axios').default;
+
+const axios = require('./axios');
 
 const { ExifImage } = require('exif');
 const Jimp = require('jimp');
@@ -17,7 +19,7 @@ const { combinations } = require('mathjs');
 
 const downloadSingleFile = async function (uri, filename) {
     try {
-        const response = await axios({ url: uri, responseType: "stream" });
+        const response = await axiosDefault({ url: uri, responseType: "stream" });
         response.data.pipe(Fs.createWriteStream(filename));
         console.log(`download done ${filename}`);
     } catch (error) {
@@ -88,11 +90,12 @@ const sendFilesToDatabase = async function () {
         for (let index = 0; index < files.length; index++) {
             const file = files[index];
             const image = await createImage(file);
-            const response = await axios.post("http://localhost:3091/images",
+            const response = await axios.post("images",
                 { ...image }
             );
 
             images.push(response.data);
+            
             process.stdout.write(`\rLoading ${h[i++]} sending images ${(index / files.length * 100).toFixed(2)}%`);
             i &= h.length - 1;
 
@@ -195,12 +198,12 @@ const sendPatternSimilarity = async function () {
 
         for (let i = 0; i < similarity.length; i++) {
             const element = similarity[i];
-            const response1 = await axios.get(`http://localhost:3091/images/filename/${element[0]}`);
-            const response2 = await axios.get(`http://localhost:3091/images/filename/${element[1]}`);
+            const response1 = await axios.get(`images/filename/${element[0]}`);
+            const response2 = await axios.get(`images/filename/${element[1]}`);
             const imageId = Number(response1.data.id);
             const secondImageId = Number(response2.data.id);
             try {
-                const response = await axios.post(`http://localhost:3091/similaritys`, { imageId, secondImageId });
+                const response = await axios.post(`similarities`, { imageId, secondImageId });
                 similarityDatabase.push(response.data);
             } catch (error) {
                 console.log(error.response.data);
@@ -230,7 +233,7 @@ const sendAlgorithms = async function () {
     for (let i = 0; i < algorithmsEdit.length; i++)
         for (let j = 0; j < algorithmsCompare.length; j++) {
             try {
-                const response = await axios.post(`http://localhost:3091/algorithms`, { name: `${algorithmsEdit[i]} ${algorithmsCompare[j]}`, parameters: JSON.stringify(algorithmsParameters[i]) });
+                const response = await axios.post(`algorithms`, { name: `${algorithmsEdit[i]} ${algorithmsCompare[j]}`, parameters: JSON.stringify(algorithmsParameters[i]) });
                 algorithms.push(response.data);
             } catch (error) {
                 console.log(error.response.data);
@@ -265,7 +268,7 @@ const generatedResultsAndSendResult = async function (images, similarities, algo
                     compare.correct = result.similarity >= 50 && !!similarityEntity || result.similarity < 50 && !similarityEntity;
 
 
-                    const response = await axios.post("http://localhost:3091/compares", {
+                    const response = await axios.post("compares", {
                         ...compare
                     });
 
