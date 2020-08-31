@@ -1,8 +1,4 @@
-const Algorithms = require("./algorithms");
 const Utils = require("./utils");
-
-const axios = require("./axios");
-
 
 var main = async function () {
     try {
@@ -10,16 +6,7 @@ var main = async function () {
         const images = await Utils.sendFilesToDatabase();
         const similarities = await Utils.sendPatternSimilarity();
         const algorithms = await Utils.sendAlgorithms();
-
-        // const responseImage = await axios.get("images");
-        // const images = responseImage.data;
-        // const responseSimilarity = await axios.get('similarities');
-        // const similarities = responseSimilarity.data;
-        // const responseAlgorithms = await axios.get('algorithms');
-        // const algorithms = responseAlgorithms.data;
-
-        const result = await Utils.generatedResultsAndSendResult(images, similarities, algorithms);
-        console.log(images, similarities, algorithms, result);
+        await Utils.generatedResultsAndSendResult(images, similarities, algorithms);
 
     } catch (error) {
         console.log(error);
