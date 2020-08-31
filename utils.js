@@ -29,51 +29,60 @@ const downloadSingleFile = async function (uri, filename) {
 };
 
 const downloadAllFile = async function () {
-    if (Fs.existsSync(defaultFolderImage) && Fs.lstatSync(defaultFolderImage).size > 1000) {
-        return;
-    }
-
-    if (!Fs.existsSync(defaultFolderImage)) {
-        Fs.mkdirSync(defaultFolderImage);
-    }
-
-    var links = [downloadUrl];
-
-    for (var i = 0; i < links.length; i++) {
-        const link = links[i];
-        const allLinksFromSite = await linksFromSite(link);
-
-        links.push(...allLinksFromSite);
-        links = links.filter(onlyUnique);
-    }
-
-    var fileIndex = 1;
-
-    for (var i = 0; i < links.length; i++) {
-        const link = links[i];
-        const { data } = await axios.get(link);
-        const site = NodeParse.parse(String(data));
-
-        const files = site.querySelectorAll('img');
-        for (var x = 0; x < files.length; x++) {
-            await downloadSingleFile("http://" + baseUrl + "/" + files[x].rawAttributes.src, `${defaultFolderImage}/img` + Number(fileIndex) + ".jpeg");
-            fileIndex = fileIndex + 1;
+    try {
+        if (Fs.existsSync(defaultFolderImage) && Fs.lstatSync(defaultFolderImage).size > 1000) {
+            return;
         }
 
-    }
+        if (!Fs.existsSync(defaultFolderImage)) {
+            Fs.mkdirSync(defaultFolderImage);
+        }
 
-    console.log("Download Complete.");
+        var links = [downloadUrl];
+
+        for (var i = 0; i < links.length; i++) {
+            const link = links[i];
+            const allLinksFromSite = await linksFromSite(link);
+
+            links.push(...allLinksFromSite);
+            links = links.filter(onlyUnique);
+        }
+
+        var fileIndex = 1;
+
+        for (var i = 0; i < links.length; i++) {
+            const link = links[i];
+            const { data } = await axios.get(link);
+            const site = NodeParse.parse(String(data));
+
+            const files = site.querySelectorAll('img');
+            for (var x = 0; x < files.length; x++) {
+                await downloadSingleFile("http://" + baseUrl + "/" + files[x].rawAttributes.src, `${defaultFolderImage}/img` + Number(fileIndex) + ".jpeg");
+                fileIndex = fileIndex + 1;
+            }
+
+        }
+
+        console.log("Download Complete.");
+
+    } catch (error) {
+        console.log(error);
+    }
 
 }
 
 const linksFromSite = async function (downloadUrl) {
-    const { data } = await axios.get(downloadUrl);
+    try {
+        const { data } = await axios.get(downloadUrl);
 
-    const site = NodeParse.parse(String(data));
+        const site = NodeParse.parse(String(data));
 
-    var links = site.querySelectorAll('a');
+        var links = site.querySelectorAll('a');
 
-    return links.map(link => "http://" + baseUrl + "/" + link.rawAttributes.href);
+        return links.map(link => "http://" + baseUrl + "/" + link.rawAttributes.href);
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const onlyUnique = function (value, index, self) {
@@ -95,7 +104,7 @@ const sendFilesToDatabase = async function () {
             );
 
             images.push(response.data);
-            
+
             process.stdout.write(`\rLoading ${h[i++]} sending images ${(index / files.length * 100).toFixed(2)}%`);
             i &= h.length - 1;
 
@@ -117,37 +126,41 @@ const sendFilesToDatabase = async function () {
 }
 
 const createImage = async function (filename) {
+    try {
 
-    const path = defaultFolderImage + "/" + filename;
+        const path = defaultFolderImage + "/" + filename;
 
-    let image = {
-        filename,
-        path,
-        width: 0,
-        height: 0,
-        date_created: Date.now().toString(),
-        location: ""
+        let image = {
+            filename,
+            path,
+            width: 0,
+            height: 0,
+            date_created: Date.now().toString(),
+            location: ""
+        }
+
+        const imageJimp = await Jimp.read(path);
+
+        const { width, height } = imageJimp.bitmap;
+
+        image.width = width;
+        image.height = height;
+        image.date_created = createdDate(path);
+
+        const exifImage = new ExifImage({ image: path }, (error, exifData) => { });
+
+        if (exifImage.exif) {
+            const { CreateDate } = exifImage.exif;
+            image.date_created = CreateDate;
+        }
+
+        if (exifImage.gps)
+            image.location = parseCoordinates(exifImage.gps);
+
+        return image;
+    } catch (error) {
+        console.log(error);
     }
-
-    const imageJimp = await Jimp.read(path);
-
-    const { width, height } = imageJimp.bitmap;
-
-    image.width = width;
-    image.height = height;
-    image.date_created = createdDate(path);
-
-    const exifImage = new ExifImage({ image: path }, (error, exifData) => { });
-
-    if (exifImage.exif) {
-        const { CreateDate } = exifImage.exif;
-        image.date_created = CreateDate;
-    }
-
-    if (exifImage.gps)
-        image.location = parseCoordinates(exifImage.gps);
-
-    return image;
 }
 
 const parseCoordinates = function (gps) {
@@ -223,67 +236,79 @@ const sendPatternSimilarity = async function () {
 }
 
 const sendAlgorithms = async function () {
+    try {
 
-    const algorithmsEdit = ["grey scale", "normalize", "blur", "gaussian blur", "dither", "remove noise", "binary", "sharpen", "normal"];
-    const algorithmsParameters = [{}, {}, { r: 10 }, { r: 10 }, {}, {}, {}, {}, {}];
-    const algorithmsCompare = ["one square", "five square", "big square", "random", "histogram"];
+        const algorithmsEdit = ["grey scale", "normalize", "blur", "gaussian blur", "dither", "remove noise", "binary", "sharpen", "normal"];
+        const algorithmsParameters = [{}, {}, { r: 10 }, { r: 10 }, {}, {}, {}, {}, {}];
+        const algorithmsCompare = ["one square", "five square", "big square", "random", "histogram"];
 
-    let algorithms = [];
+        let algorithms = [];
 
-    for (let i = 0; i < algorithmsEdit.length; i++)
-        for (let j = 0; j < algorithmsCompare.length; j++) {
-            try {
-                const response = await axios.post(`algorithms`, { name: `${algorithmsEdit[i]} ${algorithmsCompare[j]}`, parameters: JSON.stringify(algorithmsParameters[i]) });
-                algorithms.push(response.data);
-            } catch (error) {
-                console.log(error.response.data);
+        for (let i = 0; i < algorithmsEdit.length; i++)
+            for (let j = 0; j < algorithmsCompare.length; j++) {
+                try {
+                    const response = await axios.post(`algorithms`, { name: `${algorithmsEdit[i]} ${algorithmsCompare[j]}`, parameters: JSON.stringify(algorithmsParameters[i]) });
+                    algorithms.push(response.data);
+                } catch (error) {
+                    console.log(error.response.data);
+                }
+
             }
 
-        }
+        console.log(algorithms);
 
-    console.log(algorithms);
+        console.log(`Sending completed: sended ${algorithms.length} algorytm.`);
 
-    console.log(`Sending completed: sended ${algorithms.length} algorytm.`);
-
-    return algorithms;
+        return algorithms;
+    } catch (error) {
+        console.log(error);
+    }
 
 }
 
 const generatedResultsAndSendResult = async function (images, similarities, algorithms) {
-    var h = ['|', '/', '-', '\\'];
-    var x = 0;
-    let compares = [];
-    for (let i = 0; i < images.length; i++) {
-        const image1 = images[i];
-        for (let j = i; j < images.length; j++) {
-            const image2 = images[j];
-            if (image1.id !== image2.id)
-                for (let k = 0; k < algorithms.length; k++) {
-                    const algorithm = algorithms[k];
-                    let compare = { imageId: Number(image1.id), secondImageId: Number(image2.id), versionAlgorithmId: Number(algorithm.id) };
+    try {
 
-                    const similarityEntity = similarities.find(value => (value.imageId === image1.id && value.secondImageId === image2.id) || (value.imageId === image2.id && value.secondImageId === image1.id));
-                    const result = await compareWithAlgorithm(algorithm.name, algorithm.parameters, image1.path, image2.path);
-                    compare.similarity = Number(result.similarity);
-                    compare.correct = result.similarity >= 50 && !!similarityEntity || result.similarity < 50 && !similarityEntity;
+        var h = ['|', '/', '-', '\\'];
+        var x = 0;
+        let l = 0;
+
+        console.time("time");
+
+        for (let i = 0; i < images.length; i++) {
+            const image1 = images[i];
+            for (let j = i; j < images.length; j++) {
+                const image2 = images[j];
+                if (image1.id !== image2.id)
+                    for (let k = 0; k < algorithms.length; k++) {
+                        const algorithm = algorithms[k];
+                        let compare = { imageId: Number(image1.id), secondImageId: Number(image2.id), versionAlgorithmId: Number(algorithm.id) };
+
+                        const similarityEntity = similarities.find(value => (value.imageId === image1.id && value.secondImageId === image2.id) || (value.imageId === image2.id && value.secondImageId === image1.id));
+                        const result = await compareWithAlgorithm(algorithm.name, algorithm.parameters, image1.path, image2.path);
+                        compare.similarity = Number(result.similarity);
+                        compare.correct = result.similarity >= 50 && !!similarityEntity || result.similarity < 50 && !similarityEntity;
 
 
-                    const response = await axios.post("compares", {
-                        ...compare
-                    });
-
-                    compares.push(response.data);
-
-                    process.stdout.write(`\rLoading generate result ${h[x++]} ${(compares.length / (combinations(images.length, 2) * algorithms.length) * 100).toFixed(5)}%\n`);
-                    x &= h.length - 1;
-                }
+                        const response = await axios.post("compares", {
+                            ...compare
+                        });
+                        process.stdout.write(`\rLoading generate result ${h[x++]} ${(l / (combinations(images.length, 2) * algorithms.length) * 100).toFixed(5)}%     `);
+                        x &= h.length - 1;
+                        l++;
+                    }
+            }
         }
+
+
+
+        console.timeEnd("time");
+
+        process.stdout.write("\r");
+
+    } catch (error) {
+        console.log(error);
     }
-    process.stdout.write("\r");
-
-    console.log(compares);
-
-    return compares;
 }
 
 module.exports = { downloadAllFile, sendFilesToDatabase, sendPatternSimilarity, sendAlgorithms, generatedResultsAndSendResult };
