@@ -52,7 +52,7 @@ const downloadAllFile = async function () {
 
         for (var i = 0; i < links.length; i++) {
             const link = links[i];
-            const { data } = await axios.get(link);
+            const { data } = await axiosDefault.get(link);
             const site = NodeParse.parse(String(data));
 
             const files = site.querySelectorAll('img');
@@ -73,7 +73,7 @@ const downloadAllFile = async function () {
 
 const linksFromSite = async function (downloadUrl) {
     try {
-        const { data } = await axios.get(downloadUrl);
+        const { data } = await axiosDefault.get(downloadUrl);
 
         const site = NodeParse.parse(String(data));
 
