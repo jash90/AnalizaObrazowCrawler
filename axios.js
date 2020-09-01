@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-//const defaultUrl = "http://analiza.raccoonsoftware.pl/";
+//const defaultUrl = "https://analiza.raccoonsoftware.pl/";
 
 const defaultUrl = "http://localhost:3091/";
 
