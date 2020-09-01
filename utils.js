@@ -299,13 +299,8 @@ const generatedResultsAndSendResult = async function (images, similarities, algo
                     }
             }
         }
-
-
-
-        console.timeEnd("time");
-
         process.stdout.write("\r");
-
+        console.timeEnd("time");
     } catch (error) {
         console.log(error);
     }
