@@ -277,7 +277,7 @@ const generatedResultsAndSendResult = async function (images, similarities, algo
 
         for (let i = 0; i < images.length; i++) {
             const image1 = images[i];
-            for (let j = i; j < images.length; j++) {
+            for (let j = i+1; j < images.length; j++) {
                 const image2 = images[j];
                 if (image1.id !== image2.id)
                     for (let k = 0; k < algorithms.length; k++) {
