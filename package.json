@@ -1,11 +1,15 @@
 {
   "name": "AnalizaObrazowCrawler",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "index.ts",
   "repository": "https://github.com/jash90/AnalizaObrazowCrawler.git",
   "author": "Sławomir Frydrych <frydrychslawomir@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@types/array.prototype.flatmap": "^1.2.2",
+    "@types/exif": "^0.6.1",
+    "@types/mathjs": "^6.0.5",
+    "@types/sharp": "^0.25.1",
     "array.prototype.flatmap": "^1.2.3",
     "axios": "^0.19.2",
     "exif": "^0.6.0",
@@ -16,5 +20,9 @@
     "node-html-parser": "^1.2.18",
     "sharp": "^0.25.4",
     "url": "^0.11.0"
+  },
+  "devDependencies": {
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.2"
   }
 }
