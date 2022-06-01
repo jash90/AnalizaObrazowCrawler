@@ -18,7 +18,7 @@
     "jimp": "^0.14.0",
     "mathjs": "^7.2.0",
     "node-html-parser": "^1.2.18",
-    "sharp": "^0.25.4",
+    "sharp": "^0.30.5",
     "url": "^0.11.0"
   },
   "devDependencies": {
